@@ -7,6 +7,7 @@ from .storage import (
     load_case_metadata,
     cleanup_expired_cases,
     compute_file_sha256,
+    validate_case_id,
 )
 from .pdf_report import generate_pdf_report
 
@@ -24,5 +25,6 @@ __all__ = [
     "load_case_metadata",
     "cleanup_expired_cases",
     "compute_file_sha256",
+    "validate_case_id",
     "generate_pdf_report",
 ]

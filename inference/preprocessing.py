@@ -117,6 +117,7 @@ def preprocess_study(
     voxel_spacing = [float(s) for s in ref_header.get_zooms()[:3]]
 
     meta_dict = {
+        "channel_order": ["t1gd", "t1", "t2", "flair"],
         "original_shape": list(ref_shape),
         "original_affine": ref_affine.tolist(),
         "voxel_spacing_mm": voxel_spacing,

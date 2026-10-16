@@ -33,6 +33,8 @@ pnpm-debug.log*
 *.nii.gz
 *.dcm
 *.mha
+*.tar
+Task10_Colon*
 data/
 uploads/
 cases/

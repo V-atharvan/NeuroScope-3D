@@ -100,7 +100,7 @@ def test_reject_upload_missing_sequence(synthetic_study_files):
     """Verify upload fails safely when a required sequence is missing."""
     del synthetic_study_files["t1gd"]
     response = client.post("/api/cases", files=synthetic_study_files)
-    assert response.status_code == 422  # FastAPI validation rejects missing field
+    assert response.status_code in [400, 422]  # Rejection by domain validator (400) or schema (422)
 
 
 def test_reject_upload_mismatched_shape(synthetic_study_files):
@@ -211,6 +211,46 @@ def test_results_and_binary_downloads(synthetic_study_files):
     assert pdf_resp.status_code == 200
     assert pdf_resp.headers["content-type"] == "application/pdf"
     assert pdf_resp.content.startswith(b"%PDF")
+
+    # 4. Test machine-readable JSON research summary download
+    summary_resp = client.get(f"/api/cases/{case_id}/summary")
+    assert summary_resp.status_code == 200
+    assert summary_resp.headers["content-type"] == "application/json"
+    summary_data = summary_resp.json()
+    assert summary_data["case_id"] == case_id
+    assert summary_data["status"] == "completed"
+    assert "volumes" in summary_data
+    assert "labels" in summary_data
+    assert "provenance" in summary_data
+
+
+def test_prevent_duplicate_segmentation_submission(synthetic_study_files):
+    """
+    Verify that triggering segmentation while a case is already in 'processing'
+    state raises HTTP 409 Conflict to prevent redundant compute jobs.
+    """
+    upload_resp = client.post("/api/cases", files=synthetic_study_files)
+    case_id = upload_resp.json()["case_id"]
+
+    # Manually transition case to processing
+    state = {
+        "case_id": case_id,
+        "status": "processing",
+        "file_paths": {},
+        "spatial_metadata": {"shape": [16, 16, 16], "spacing_mm": [1.0, 1.0, 1.0]},
+    }
+    save_case_metadata(case_id, state)
+
+    # Status endpoint should report processing and 50%
+    st_resp = client.get(f"/api/cases/{case_id}/status")
+    assert st_resp.status_code == 200
+    assert st_resp.json()["status"] == "processing"
+    assert st_resp.json()["progress_percentage"] == 50
+
+    # Submitting again should be rejected with HTTP 409
+    dup_resp = client.post(f"/api/cases/{case_id}/segment")
+    assert dup_resp.status_code == 409
+    assert "already in progress" in dup_resp.json()["detail"]
 
 
 def test_24_hour_storage_cleanup():

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container-low": "#eff4ff", "on-primary": "#ffffff", "tertiary-fixed-dim": "#69d4f8", "on-primary-fixed-variant": "#00429a", "on-background": "#0b1c30", "on-error": "#ffffff", "secondary-fixed-dim": "#aec6ff", "surface-container-high": "#dce9ff", "primary": "#0056c4", "on-secondary-fixed": "#001a42", "tertiary-container": "#007f9d", "on-error-container": "#93000a", "background": "#f8f9ff", "secondary-fixed": "#d8e2ff", "inverse-primary": "#b0c6ff", "secondary": "#115abf", "on-secondary": "#ffffff", "primary-fixed-dim": "#b0c6ff", "on-primary-fixed": "#001944", "tertiary-fixed": "#b7eaff", "surface-container-lowest": "#ffffff", "on-tertiary-fixed": "#001f28", "on-secondary-fixed-variant": "#004396", "on-primary-container": "#fefcff", "on-surface-variant": "#424654", "on-secondary-container": "#002e6b", "surface-tint": "#0058c9", "surface-container-highest": "#d3e4fe", "surface-bright": "#f8f9ff", "on-tertiary": "#ffffff", "primary-container": "#196eef", "on-tertiary-container": "#fafdff", "error": "#ba1a1a", "surface-variant": "#d3e4fe", "surface-container": "#e5eeff", "on-surface": "#0b1c30", "tertiary": "#00647c", "surface": "#f8f9ff", "primary-fixed": "#d9e2ff", "surface-dim": "#cbdbf5", "inverse-surface": "#213145", "secondary-container": "#6096fe", "on-tertiary-fixed-variant": "#004e61", "inverse-on-surface": "#eaf1ff", "outline-variant": "#c2c6d7", "outline": "#727786", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "1rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter": "0.75rem", "gutter-md": "1rem", "space-lg": "1rem", "margin-md": "1.5rem", "space-md": "0.75rem", "space-xl": "1.5rem" }, "fontFamily": { "label-sm": ["JetBrains Mono"], "headline-sm": ["Inter"], "body-md": ["Inter"], "label-lg": ["JetBrains Mono"], "label-md": ["JetBrains Mono"], "headline-md": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-lg": ["Inter"] }, "fontSize": { "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-md": ["11px", { "lineHeight": "16px", "fontWeight": "500" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-outline-variant"><div class="h-16 w-full px-gutter-md flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md"><img alt="NeuroScope 3D Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XKzK9K3auDJWQb2cVByjB5VHa7tO7ZaiyVv-KwrgfkkaIaNrtqqGdy1psMN9cJXnT2JXL_K4BFl60aJEvQPt_ZrfBcLrpdtViE_4qzx6xxgAwDJtVC-mWh7Whiqsbwd-DxNqYoTsAG-MneGbfw2goRa6vW0EK-TZwAUfzJW_q5VhchuWvj4atGB21d-uwJJy9WdlFoXJy4YzZ4Fmmap9YPGyTCOOXXJ3o1LtTJF_BNsFgoYgj8MkVWlw"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">NeuroScope 3D</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1 tracking-wider">MONAI SegResNet Multimodal Brain MRI Pipeline</span></div></div><nav class="flex items-center gap-space-xs" data-active-classes="bg-primary text-on-primary font-body-sm font-semibold rounded"><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="workstation-multiplanar" href="#">Workstation (Multiplanar)</a><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="provenance-and-audit-report" href="#">Provenance &amp; Audit Report</a><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="case-validation-diagnostics" href="#">Case Validation (Diagnostics)</a></nav><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><div class="flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-low border border-outline-variant rounded"><span class="w-2 h-2 rounded-full bg-primary inline-block"></span><span class="font-label-sm text-label-sm text-on-surface">FastAPI Connected</span></div><div class="px-space-sm py-1 bg-secondary-container text-on-surface font-label-sm text-label-sm rounded font-medium">SegResNet Ready</div><div class="px-space-sm py-1 bg-surface-container border border-outline-variant text-on-surface-variant font-label-sm text-label-sm rounded font-mono">#main-8f3a1b</div><button class="px-space-sm py-1 bg-surface-container-lowest border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm rounded transition-colors" type="button">Reset Study</button></div><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm"><div class="text-right"><div class="font-body-sm text-body-sm font-medium text-on-surface leading-tight">Dr. Elena Rostova</div><div class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Lead Neuro-Radiologist</div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div><div class="w-full bg-[#F2F7A0] border-l-4 border-l-primary border-y border-y-[#E4EB78] px-gutter-md py-1.5 flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-on-surface text-[16px]">warning</span><span class="font-label-md text-label-md text-[#0F172A] uppercase font-semibold tracking-wide">RESEARCH AND EDUCATION PROTOTYPE ONLY: This software does not provide medical diagnoses, treatment planning, or clinical decisions. Not FDA cleared.</span></div><div class="font-label-sm text-label-sm text-[#0F172A] font-mono">DICOM 3.0 / NIfTI V2</div></div></header><aside class="fixed left-0 top-[94px] bottom-0 w-64 bg-surface-container-lowest border-r border-outline-variant z-40 flex flex-col justify-between p-space-md"><div class="flex flex-col gap-space-md"><div class="px-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Series Explorer</div><nav class="flex flex-col gap-space-xs" data-active-classes="bg-surface-container-high text-on-surface font-semibold"><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>T1-Weighted Contrast (T1CE)</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>T2 FLAIR Volumetric</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>Diffusion Trace (DWI/ADC)</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">60 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="case-validation-diagnostics" href="#"><span>Pre-op Baseline Co-reg</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a></nav><div class="h-px bg-outline-variant my-space-xs"></div><div class="px-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Segmentation Layers</div><div class="flex flex-col gap-1.5 px-space-xs"><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-[#F2F7A0] text-[#0F172A] border border-[#E4EB78] rounded"><span>Enhancing Tumor (ET)</span><span class="font-mono">18.4 cm³</span></div><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-tertiary-fixed text-[#0F172A] border border-outline-variant rounded"><span>Necrotic Core (NCR)</span><span class="font-mono">6.1 cm³</span></div><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-surface-container text-on-surface-variant border border-outline-variant rounded"><span>Peritumoral Edema (ED)</span><span class="font-mono">34.8 cm³</span></div></div></div><div class="border-t border-outline-variant pt-space-md flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant"><div class="flex justify-between"><span>Inference Device</span><span class="font-mono text-on-surface font-semibold">CUDA:0 (A100)</span></div><div class="flex justify-between"><span>Resolution</span><span class="font-mono text-on-surface">1.0 × 1.0 × 1.0 mm</span></div><div class="flex justify-between"><span>Pipeline Latency</span><span class="font-mono text-on-surface">1.42s</span></div></div></aside><div class="pl-64"><main class="relative pt-[94px] w-full min-h-screen bg-background"><div class="flex flex-col w-full">
+<!-- Top Context Diagnostic Strip -->
+<div class="w-full bg-[#EF4444] text-white px-gutter-md py-2 flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px]">gpp_maybe</span>
+<span class="font-label-md text-label-md uppercase font-semibold tracking-wide">
+        Safe-Failure Lockout: Neural Inference Halted at Stage 4 (Affine Compatibility Check)
+      </span>
+</div>
+<div class="flex items-center gap-space-md font-label-sm text-label-sm">
+<span class="bg-white/20 px-2 py-0.5 rounded font-mono">CASE_ID: BRATS21_00492</span>
+<span class="bg-white/20 px-2 py-0.5 rounded font-mono">ERR_CODE: DIM_AFFINE_MISMATCH_409</span>
+</div>
+</div>
+<!-- Workspace Two-Column Container -->
+<div class="flex flex-col xl:flex-row w-full p-gutter-md gap-gutter-md">
+<!-- LEFT COLUMN: Upload Panel in Error State (380px fixed on desktop) -->
+<section class="w-full xl:w-[380px] shrink-0 flex flex-col gap-space-md">
+<!-- Panel Header Card -->
+<div class="bg-surface-container-lowest p-space-md border border-outline-variant shadow-sm rounded">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Step 01</span>
+<span class="text-outline-variant font-label-sm">/</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Ingestion</span>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 bg-error-container text-error rounded font-semibold">
+            Status: Error (1 Invalid)
+          </span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Study Ingestion &amp; Upload</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+          BraTS-2021 NIfTI-1 volumetric package for multisequence inference.
+        </p>
+</div>
+<!-- Sequence Slot Cards List -->
+<div class="flex flex-col gap-space-sm">
+<!-- Slot 1: T1 Native (Valid) -->
+<div class="bg-surface-container-lowest p-space-md border border-outline-variant rounded flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-surface-container text-on-surface font-label-sm text-label-sm rounded font-bold">T1</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface truncate max-w-[190px]">brats21_00492_t1.nii.gz</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14.2 MB</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1 border-t border-surface-container">
+<span class="font-label-sm text-label-sm font-mono">240 × 240 × 155</span>
+<div class="flex items-center gap-1 text-[#00647c] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Valid Reference</span>
+</div>
+</div>
+</div>
+<!-- Slot 2: T1CE / Contrast (Valid) -->
+<div class="bg-surface-container-lowest p-space-md border border-outline-variant rounded flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-surface-container text-on-surface font-label-sm text-label-sm rounded font-bold">T1Gd</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface truncate max-w-[190px]">brats21_00492_t1ce.nii.gz</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">14.8 MB</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1 border-t border-surface-container">
+<span class="font-label-sm text-label-sm font-mono">240 × 240 × 155</span>
+<div class="flex items-center gap-1 text-[#00647c] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Valid Grid</span>
+</div>
+</div>
+</div>
+<!-- Slot 3: T2 (Valid) -->
+<div class="bg-surface-container-lowest p-space-md border border-outline-variant rounded flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-surface-container text-on-surface font-label-sm text-label-sm rounded font-bold">T2</span>
+<span class="font-body-sm text-body-sm font-medium text-on-surface truncate max-w-[190px]">brats21_00492_t2.nii.gz</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">15.1 MB</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant pt-1 border-t border-surface-container">
+<span class="font-label-sm text-label-sm font-mono">240 × 240 × 155</span>
+<div class="flex items-center gap-1 text-[#00647c] font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Valid Grid</span>
+</div>
+</div>
+</div>
+<!-- Slot 4: FLAIR (CRITICAL ERROR STATE) -->
+<div class="bg-[#FEF2F2] p-space-md border-2 border-[#EF4444] rounded flex flex-col gap-1.5 shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-[#EF4444] text-white font-label-sm text-label-sm rounded font-bold">FLAIR</span>
+<span class="font-body-sm text-body-sm font-semibold text-[#0F172A] truncate max-w-[170px]">
+                brats21_00492_flair_unaligned.nii.gz
+              </span>
+</div>
+<span class="font-label-sm text-label-sm font-mono text-[#0F172A]">11.4 MB</span>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-[#FCA5A5]">
+<span class="font-label-sm text-label-sm font-mono text-[#B91C1C] font-bold">240 × 240 × 120 ✕</span>
+<span class="px-1.5 py-0.2 bg-[#FEE2E2] text-[#B91C1C] font-label-sm text-label-sm rounded font-bold tracking-tight">
+              DIMENSION MISMATCH
+            </span>
+</div>
+</div>
+</div>
+<!-- Prominent Red In-Column Diagnostic Alert Box -->
+<div class="bg-surface-container-lowest border-l-4 border-l-[#EF4444] border-y border-r border-outline-variant p-space-md rounded flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-[#B91C1C]">
+<span class="material-symbols-outlined text-[18px]">error</span>
+<span class="font-headline-sm text-[14px] leading-tight font-semibold">Spatial Dimension Mismatch</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-normal">
+          FLAIR slice dimensions <span class="font-mono font-bold text-[#B91C1C] bg-[#FEE2E2] px-1">(240 × 240 × 120)</span> do not match T1 reference volume <span class="font-mono font-bold text-on-surface bg-surface-container px-1">(240 × 240 × 155)</span>.
+        </p>
+<div class="bg-surface-container-low p-space-xs rounded font-mono text-label-sm text-on-surface-variant border border-outline-variant">
+          Affines Incompatible: <span class="text-[#B91C1C]">qform_code != sform_code</span> (dz: 1.25mm vs 1.00mm)
+        </div>
+</div>
+<!-- Left Column Action Controls -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<!-- Remediation Primary Upload -->
+<button class="w-full py-2.5 px-space-md bg-[#2373F4] hover:bg-[#1B5EC8] text-white font-body-sm text-body-sm font-semibold rounded flex items-center justify-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<span>Upload Corrected FLAIR (.nii.gz)</span>
+</button>
+<!-- Blocked Inference CTA with explicit Safety Tooltip representation -->
+<div class="relative group">
+<button class="w-full py-2.5 px-space-md bg-surface-container border border-outline-variant text-outline cursor-not-allowed font-body-sm text-body-sm font-semibold rounded flex items-center justify-center gap-space-xs" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Run Segmentation Pipeline</span>
+</button>
+<div class="mt-1 px-space-xs text-center font-label-sm text-label-sm text-error font-mono">
+            Safety interlock active: Resolve FLAIR alignment to enable.
+          </div>
+</div>
+</div>
+<!-- Protocol Metadata Footer Card -->
+<div class="bg-surface-container-low border border-outline-variant p-space-sm rounded flex flex-col gap-1 font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span>Inference Target</span>
+<span class="font-mono text-on-surface">MONAI SegResNet BraTS</span>
+</div>
+<div class="flex justify-between">
+<span>Target Voxel Res</span>
+<span class="font-mono text-on-surface">1.0 × 1.0 × 1.0 mm³</span>
+</div>
+<div class="flex justify-between">
+<span>Affine Rule</span>
+<span class="font-mono text-on-surface">Strict RAS Orthogonal</span>
+</div>
+</div>
+</section>
+<!-- MAIN RIGHT PANEL: Diagnostic Troubleshooting & Safe Abort Card -->
+<main class="flex-1 flex flex-col gap-gutter-md min-w-0">
+<!-- Critical Header Card / Safe Abort Alert -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded shadow-sm overflow-hidden">
+<!-- Top Solid Red Status Accent Strip -->
+<div class="h-1.5 w-full bg-[#EF4444]"></div>
+<div class="p-gutter-md flex flex-col md:flex-row md:items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded bg-[#FEE2E2] flex items-center justify-center shrink-0 border border-[#EF4444]">
+<span class="material-symbols-outlined text-[#B91C1C] text-[24px]">cancel</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm flex-wrap">
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">Case Validation Failed - Safe Abort Triggered</h1>
+<span class="bg-[#FEE2E2] text-[#B91C1C] border border-[#EF4444] px-2 py-0.5 rounded font-label-sm text-label-sm font-bold uppercase">
+                  Execution Intercepted
+                </span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-1 max-w-3xl">
+                The pipeline halted automatically before neural network inference to prevent erroneous clinical measurements and invalid segmentation tensors.
+              </p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 bg-surface-container-low p-1.5 rounded border border-outline-variant font-mono text-label-sm">
+<span class="text-on-surface-variant">STAGE:</span>
+<span class="text-error font-bold">MONAI_PRECHECK_FAIL</span>
+</div>
+</div>
+</div>
+<!-- SECTION 1: Pre-Inference Validation Checklist -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-gutter-md shadow-sm">
+<div class="flex items-center justify-between mb-space-md pb-space-xs border-b border-outline-variant">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Pre-Inference Validation Checklist</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">PASS: 3 / FAIL: 1 / SKIPPED: 2</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<!-- Checklist Item 1 (Passed) -->
+<div class="flex items-start justify-between p-space-sm bg-surface-container-low border border-outline-variant rounded">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[#00647c] text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">File Integrity &amp; NIfTI Gzip Decompression</span>
+<span class="font-label-md text-label-md text-on-surface-variant">All 4 volumes verified as standard valid NIfTI-1 format (magic string "n+1\0").</span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-surface-container text-[#00647c] font-label-sm text-label-sm rounded font-bold shrink-0">
+              PASSED
+            </span>
+</div>
+<!-- Checklist Item 2 (Passed) -->
+<div class="flex items-start justify-between p-space-sm bg-surface-container-low border border-outline-variant rounded">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[#00647c] text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Non-Constant Voxel Intensity Variance</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Variance &gt; 0.05 across all 3D fields. No blank, clipped, or corrupted zero-signal slices.</span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-surface-container text-[#00647c] font-label-sm text-label-sm rounded font-bold shrink-0">
+              PASSED
+            </span>
+</div>
+<!-- Checklist Item 3 (Passed) -->
+<div class="flex items-start justify-between p-space-sm bg-surface-container-low border border-outline-variant rounded">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[#00647c] text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Voxel Bit-Depth &amp; Precision</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Sequences comply with Float32/Int16 radiologic standard. No NaN or Inf numerical entries.</span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-surface-container text-[#00647c] font-label-sm text-label-sm rounded font-bold shrink-0">
+              PASSED
+            </span>
+</div>
+<!-- Checklist Item 4 (FAILED) -->
+<div class="flex items-start justify-between p-space-sm bg-[#FEF2F2] border-2 border-[#EF4444] rounded">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[#EF4444] text-[18px] shrink-0 mt-0.5">cancel</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-bold text-[#B91C1C]">Compatible Grid Affines &amp; Voxel Dimensions</span>
+<span class="font-label-md text-label-md text-on-surface">
+                  FLAIR matrix: <span class="font-mono font-bold text-[#B91C1C]">240×240×120</span> vs Reference: <span class="font-mono font-bold">240×240×155</span>. Slice spacing <span class="font-mono text-[#B91C1C] font-bold">dz=1.25mm</span> (Ref dz=1.00mm).
+                </span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-[#EF4444] text-white font-label-sm text-label-sm rounded font-bold shrink-0">
+              FAILED
+            </span>
+</div>
+<!-- Checklist Item 5 (Skipped) -->
+<div class="flex items-start justify-between p-space-sm bg-surface-container-lowest border border-outline-variant rounded opacity-65">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[18px] shrink-0 mt-0.5">pause_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">Skull-Stripping Boundary Check (HD-BET)</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Automated intracranial envelope validation halted due to preceding spatial failure.</span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant font-label-sm text-label-sm rounded font-semibold shrink-0">
+              SKIPPED
+            </span>
+</div>
+<!-- Checklist Item 6 (Skipped) -->
+<div class="flex items-start justify-between p-space-sm bg-surface-container-lowest border border-outline-variant rounded opacity-65">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[18px] shrink-0 mt-0.5">pause_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-medium text-on-surface">SegResNet Volumetric Inference</span>
+<span class="font-label-md text-label-md text-on-surface-variant">4-channel multi-sequence tensor construction pipeline aborted.</span>
+</div>
+</div>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant font-label-sm text-label-sm rounded font-semibold shrink-0">
+              SKIPPED
+            </span>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Affine Matrix Inspection (Comparison Grid) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-gutter-md shadow-sm">
+<div class="flex items-center justify-between mb-space-sm pb-space-xs border-b border-outline-variant">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">grid_4x4</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Affine Matrix Inspection (Comparison Grid)</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">Coordinate Space: LPI → RAS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+          Direct inspection of the <code class="font-mono text-on-surface font-semibold">sform</code> and <code class="font-mono text-on-surface font-semibold">qform</code> transformation headers shows divergent coordinate scaling along the Z-axis (axial spacing disparity).
+        </p>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-md">
+<!-- T1 Reference Matrix Box -->
+<div class="border border-outline-variant rounded bg-surface-container-low p-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-primary text-white font-label-sm text-label-sm rounded font-bold">REF</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">T1 Reference Matrix (1.00mm Isotropic)</span>
+</div>
+<span class="font-label-sm text-label-sm font-mono text-[#00647c]">sform_code=1</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-space-sm rounded font-mono text-label-md text-on-surface overflow-x-auto leading-relaxed">
+<div>[ <span class="text-primary font-bold">-1.0000</span>,   0.0000,   0.0000,   98.5000 ]</div>
+<div>[  0.0000,  <span class="text-primary font-bold"> 1.0000</span>,   0.0000, -124.0000 ]</div>
+<div>[  0.0000,   0.0000,  <span class="text-primary font-bold"> 1.0000</span>,  -72.2500 ]</div>
+<div>[  0.0000,   0.0000,   0.0000,    1.0000 ]</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Voxel Spacing (dx, dy, dz):</span>
+<span class="font-mono text-on-surface font-semibold">1.00 × 1.00 × 1.00 mm</span>
+</div>
+</div>
+<!-- FLAIR Incompatible Matrix Box -->
+<div class="border-2 border-[#EF4444] rounded bg-[#FEF2F2] p-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 bg-[#EF4444] text-white font-label-sm text-label-sm rounded font-bold">FAIL</span>
+<span class="font-body-sm text-body-sm font-bold text-[#B91C1C]">FLAIR Matrix (1.25mm Thick Slice)</span>
+</div>
+<span class="font-label-sm text-label-sm font-mono text-[#B91C1C] font-bold">qform_code=2</span>
+</div>
+<div class="bg-surface-container-lowest border border-[#FCA5A5] p-space-sm rounded font-mono text-label-md text-on-surface overflow-x-auto leading-relaxed">
+<div>[ <span class="text-on-surface font-semibold">-1.0000</span>,   0.0000,   0.0000,   98.5000 ]</div>
+<div>[  0.0000,  <span class="text-on-surface font-semibold"> 1.0000</span>,   0.0000, -124.0000 ]</div>
+<div>[  0.0000,   0.0000,  <span class="text-[#EF4444] font-bold bg-[#FEE2E2] px-1"> 1.2500</span>,  -58.1250 ]</div>
+<div>[  0.0000,   0.0000,   0.0000,    1.0000 ]</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm pt-1">
+<span class="text-[#B91C1C] font-semibold">Voxel Spacing (dx, dy, dz):</span>
+<span class="font-mono text-[#B91C1C] font-bold bg-[#FEE2E2] px-1 rounded">1.00 × 1.00 × 1.25 mm</span>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: Actionable Remediation Steps for Researcher -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-gutter-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">build_circle</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Actionable Remediation Steps for Researcher</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">Estimated fix time: &lt; 90s</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md">
+<!-- Step 1 -->
+<div class="border border-outline-variant bg-surface-container-low p-space-md rounded flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="w-5 h-5 rounded bg-primary text-white font-label-sm text-label-sm flex items-center justify-center font-bold">1</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Co-register to T1 Reference</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">
+                Apply rigid 6-DOF coregistration using ANTs or FSL FLIRT to map FLAIR space into the reference volume frame.
+              </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-space-xs rounded font-mono text-[10px] leading-tight text-on-surface overflow-x-auto">
+              flirt -in flair.nii -ref t1.nii -out flair_reg.nii -dof 6
+            </div>
+</div>
+<!-- Step 2 -->
+<div class="border border-outline-variant bg-surface-container-low p-space-md rounded flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="w-5 h-5 rounded bg-primary text-white font-label-sm text-label-sm flex items-center justify-center font-bold">2</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Resample to 1.0mm Isotropic</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">
+                Interpolate the 120-slice acquisition along the Z dimension to yield 155 slices matching the standard 1mm grid.
+              </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-space-xs rounded font-mono text-[10px] leading-tight text-on-surface overflow-x-auto">
+              tio.Resample((1.0, 1.0, 1.0))(flair_img)
+            </div>
+</div>
+<!-- Step 3 -->
+<div class="border border-outline-variant bg-surface-container-low p-space-md rounded flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="w-5 h-5 rounded bg-primary text-white font-label-sm text-label-sm flex items-center justify-center font-bold">3</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Re-Upload Aligned File</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">
+                Replace <code class="font-mono text-on-surface">flair_unaligned.nii.gz</code> with the resampled volume. Validation will run automatically.
+              </p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-space-xs rounded font-mono text-[10px] leading-tight text-on-surface">
+              Target name: brats21_00492_flair.nii.gz
+            </div>
+</div>
+</div>
+</div>
+<!-- SECTION 4: Actions & Tools Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-gutter-md shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-xs w-full sm:w-auto">
+<!-- Button 1: Re-upload in #2373F4 -->
+<button class="py-2.5 px-space-md bg-[#2373F4] hover:bg-[#1B5EC8] text-white font-body-sm text-body-sm font-semibold rounded flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+<span>Re-upload FLAIR Sequence</span>
+</button>
+<!-- Button 2: Auto-Resample in #578EF5 -->
+<button class="py-2.5 px-space-md bg-[#578EF5] hover:bg-[#3B7BF3] text-white font-body-sm text-body-sm font-semibold rounded flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">auto_fix_high</span>
+<span>Run Auto-Resample &amp; Coregister (ANTs PyBIDS)</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs w-full sm:w-auto justify-end">
+<!-- Button 3: View Complete Log in white with #E2E8F0 border -->
+<button class="py-2.5 px-space-md bg-white hover:bg-surface-container-low text-on-surface border border-[#E2E8F0] font-body-sm text-body-sm font-semibold rounded flex items-center gap-space-xs transition-colors" id="toggle-log-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>View Complete Validation Log</span>
+</button>
+<!-- Button 4: Cancel & Reset Study in Outline -->
+<button class="py-2.5 px-space-md bg-transparent hover:bg-surface-container text-on-surface-variant border border-outline-variant font-body-sm text-body-sm font-medium rounded flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span>
+<span>Cancel &amp; Reset Study</span>
+</button>
+</div>
+</div>
+<!-- Collapsible Detailed Diagnostic Log Drawer -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-gutter-md shadow-sm flex flex-col gap-space-sm" id="validation-log-card">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[18px]">receipt_long</span>
+<span class="font-headline-sm text-[14px] text-on-surface font-semibold">FastAPI Diagnostic Worker Traceback (stdout)</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">Timestamp: 2025-02-14T10:48:19.402Z</span>
+</div>
+<div class="bg-surface-container-low border border-outline-variant p-space-md rounded font-mono text-label-sm text-on-surface overflow-x-auto space-y-1">
+<div class="text-[#00647c]">[INFO] 10:48:18.112 - monai.transforms.LoadImaged initialized with keys=('t1', 't1ce', 't2', 'flair')</div>
+<div class="text-[#00647c]">[INFO] 10:48:18.490 - Validated t1.nii.gz: shape=(240, 240, 155), spacing=(1.0, 1.0, 1.0)</div>
+<div class="text-[#00647c]">[INFO] 10:48:18.724 - Validated t1ce.nii.gz: shape=(240, 240, 155), spacing=(1.0, 1.0, 1.0)</div>
+<div class="text-[#00647c]">[INFO] 10:48:19.011 - Validated t2.nii.gz: shape=(240, 240, 155), spacing=(1.0, 1.0, 1.0)</div>
+<div class="text-[#B91C1C] font-bold">[CRITICAL] 10:48:19.380 - SpatialDimensionError in CheckSpatialConsistencyd:</div>
+<div class="text-[#B91C1C] pl-4">Key 'flair' has spatial_shape=(240, 240, 120), expected=(240, 240, 155).</div>
+<div class="text-[#B91C1C] pl-4">Affine diagonal deviation: Ref=[ -1.  1.  1.] vs Img=[ -1.  1.  1.25]. Max tolerance=0.001.</div>
+<div class="text-error font-bold">[HALT] 10:48:19.401 - SafeAbortTriggered: PyTorch tensor allocation rejected. Pipeline exit code 409.</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+<script>
+  // Simple micro-interaction for toggling log view focus
+  const logBtn = document.getElementById('toggle-log-btn');
+  const logCard = document.getElementById('validation-log-card');
+
+  if (logBtn && logCard) {
+    logBtn.addEventListener('click', () => {
+      logCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      logCard.classList.add('border-primary');
+      setTimeout(() => {
+        logCard.classList.remove('border-primary');
+      }, 1200);
+    });
+  }
+</script></main></div></body></html>

@@ -98,7 +98,17 @@ NeuroScope-3D/
 - **Git**
 - Optional: NVIDIA GPU with CUDA drivers for accelerated PyTorch/MONAI inference.
 
-### 4.1 Backend Setup
+### 4.0 One-Command Platform Launcher (Judges & Evaluators)
+You can launch both the FastAPI backend (`http://localhost:8000`) and React web workstation (`http://localhost:5173`) concurrently with a single command:
+```bash
+# Cross-platform Python launcher:
+python run_platform.py
+
+# Or on Windows:
+run_platform.bat
+```
+
+### 4.1 Backend Setup (Manual)
 ```bash
 # 1. Create and activate a Python virtual environment
 python -m venv .venv
@@ -120,7 +130,7 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 The backend API documentation is accessible at `http://localhost:8000/docs`.  
 The backend health check is at `http://localhost:8000/api/health`.
 
-### 4.2 Frontend Setup
+### 4.2 Frontend Setup (Manual)
 ```bash
 # In a separate terminal:
 cd frontend
@@ -133,25 +143,63 @@ npm run dev
 ```
 The web application is accessible at `http://localhost:5173`.
 
-### 4.3 Running Standalone Inference (CLI)
-You can invoke the inference pipeline directly without running the web interface:
+### 4.3 Standalone Judges' Scorer CLI (`segment.py`)
+The platform includes the official standalone runner required by the judges' scoring harness:
 ```bash
-python -m inference.predict \
+python segment.py \
   --t1 path/to/case_T1.nii.gz \
   --t1gd path/to/case_T1Gd.nii.gz \
   --t2 path/to/case_T2.nii.gz \
   --flair path/to/case_FLAIR.nii.gz \
-  --output path/to/predicted_labels.nii.gz \
-  --weights models/brats_mri_segmentation/models/model.pt \
-  --device cuda
+  --output path/to/predicted_seg.nii.gz
 ```
-*(If running on a CPU-only host, omit `--device cuda` or specify `--device cpu`.)*
+Accepts four co-registered sequences, runs the 3D model, and writes predicted integer labels (1 NCR, 2 ED, 4 ET) matching the input grid and affine. If running on GPU, add `--device cuda`.
 
-### 4.4 Running Automated Acceptance Tests
+### 4.4 Running Automated Acceptance & Security Tests
 ```bash
-# Run the complete test suite (all unit, integration, and organizer acceptance tests):
+# Run the complete test suite (all 10 test suites, 100+ tests):
 python -m pytest tests/ -v
+
+# Run the storage security & path traversal test suite (Fix 3):
+python -m pytest tests/test_storage_security.py -v
+
+# Run the centroid calculation & crosshair synchronization test suite (Fix 2):
+python -m pytest tests/test_centroid_crosshair.py -v
+
+# Run the NiiVue segmentation overlay loading test suite (Fix 1):
+python -m pytest tests/test_overlay_loading.py -v
+
+# Run the dedicated PDF Report System test suite (all 18 criteria):
+python -m pytest tests/test_pdf_report_system.py -v
 ```
+
+### 4.5 Professional PDF Report Generation & Download
+NeuroScope 3D produces a publication-grade, 4-page medical imaging research report for every successfully processed case:
+
+1. **Web UI Flow:**
+   - Ingest a multi-sequence study (or click **Load Sample BraTS Study**).
+   - Click **Run Segmentation Pipeline**.
+   - Upon completion, the **Export & Provenance** panel expands with a live **4-Page Research Report Summary** preview.
+   - Click **Export PDF Report** to download the dated document (`neuroscope3d_report_{case_id}_{date}.pdf`).
+   - Click **Export BraTS Label NIfTI (.nii.gz)** to download the predicted 3D segmentation mask.
+
+2. **REST API Direct Access:**
+   ```bash
+   # Download PDF Report (returns application/pdf with Content-Disposition)
+   curl -O http://localhost:8000/api/cases/{case_id}/report
+
+   # Download Predicted Label Map (.nii.gz)
+   curl -O http://localhost:8000/api/cases/{case_id}/mask
+   ```
+
+3. **Report Specifications & Architecture:**
+   - **Page 1 — Case Summary & Orthogonal Overlays:** Study header, mandatory disclaimer, multi-planar slice visualizations (Axial, Coronal, Sagittal) extracted at the tumor centroid with translucent subregion overlays, compact volume summary table, and processing duration.
+   - **Page 2 — Segmentation & Volumetrics:** BraTS 2021 tissue definitions, strict nesting constraint enforcement ($ET \subseteq TC \subseteq WT$, non-additive rule), physical space volume quantitation table ($mm^3$ and $mL$), 3D spatial bounding boxes, and case-specific expert comparison metrics (DSC & Sensitivity) when ground truth is uploaded.
+   - **Page 3 — Model Evaluation & Quality Audit:** Pretrained MONAI SegResNet held-out cohort benchmark metrics (Mean DSC: WT 0.9026, TC 0.8559, ET 0.7905), training overlap disclosure, comprehensive clinical limitations, and 6-point NIfTI geometry validation audit results.
+   - **Page 4 — Provenance & Reproducibility:** Cryptographic SHA-256 checksums computed on raw input streams, verified MONAI bundle metadata (v0.5.4, Apache 2.0 License), preprocessing/inference parameters, code commit hash, ISO 8601 UTC timestamp, and ephemeral 24-hour retention notice.
+   - **Running Header & Footer:** Every page includes the regulatory header and running footer:  
+     `"NeuroScope 3D | Research and Teaching Use Only | Not for Clinical Diagnosis | Page X of 4"`
+
 
 ---
 

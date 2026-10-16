@@ -9,6 +9,9 @@ scipy>=1.11.0
 reportlab>=4.1.0
 httpx>=0.27.0
 pytest>=8.0.0
+scikit-image>=0.22.0
+trimesh>=4.0.0
+pydicom>=2.4.0
 
 # Inference dependencies (Installed and verified on target GPU / inference branch)
 # torch>=2.1.0

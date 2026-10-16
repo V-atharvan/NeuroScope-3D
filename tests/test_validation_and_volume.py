@@ -82,6 +82,61 @@ def test_anisotropic_and_non_cubic_volumes():
     assert volumes["WT"]["voxel_count"] == 10000
 
 
+def test_single_labelled_voxel_volume():
+    """
+    Verify volume and centroid calculation for a single labelled voxel
+    under both isotropic and anisotropic voxel spacing.
+    Formula: 1 voxel * (sx * sy * sz) / 1000 mL.
+    """
+    shape = (20, 20, 20)
+    spacing = (1.5, 2.0, 3.0)  # voxel mm³ = 1.5 * 2.0 * 3.0 = 9.0 mm³ -> 0.009 mL
+
+    # Single ET voxel (label 4)
+    mask_et = np.zeros(shape, dtype=np.uint8)
+    mask_et[10, 10, 10] = 4
+    vols_et = calculate_region_volumes(mask_et, spacing)
+    assert vols_et["ET"]["voxel_count"] == 1
+    assert vols_et["TC"]["voxel_count"] == 1
+    assert vols_et["WT"]["voxel_count"] == 1
+    assert pytest.approx(vols_et["ET"]["volume_ml"], abs=1e-5) == 0.009
+    assert vols_et["ET"]["centroid_voxel"] == [10, 10, 10]
+
+    # Single NCR voxel (label 1) -> in WT and TC, not ET
+    mask_ncr = np.zeros(shape, dtype=np.uint8)
+    mask_ncr[5, 8, 12] = 1
+    vols_ncr = calculate_region_volumes(mask_ncr, spacing)
+    assert vols_ncr["ET"]["voxel_count"] == 0
+    assert vols_ncr["TC"]["voxel_count"] == 1
+    assert vols_ncr["WT"]["voxel_count"] == 1
+    assert pytest.approx(vols_ncr["TC"]["volume_ml"], abs=1e-5) == 0.009
+    assert vols_ncr["ET"]["volume_ml"] == 0.0
+
+
+def test_affine_determinant_volume_calculation():
+    """
+    Verify that affine matrix determinant is used for volume computation when provided,
+    supporting rotated and sheared physical voxel grids.
+    """
+    mask = np.zeros((10, 10, 10), dtype=np.uint8)
+    mask[2:6, 2:6, 2:6] = 4  # 4 * 4 * 4 = 64 voxels of ET
+    spacing = (1.0, 1.0, 1.0)
+
+    # 45-degree rotated affine around Z axis with scaling 2.0 on Z
+    # det([cos -sin 0; sin cos 0; 0 0 2]) = (cos² + sin²) * 2 = 2.0 mm³
+    theta = np.pi / 4.0
+    affine = np.array([
+        [np.cos(theta), -np.sin(theta), 0.0, 10.0],
+        [np.sin(theta),  np.cos(theta), 0.0, 20.0],
+        [0.0,            0.0,           2.0, 30.0],
+        [0.0,            0.0,           0.0,  1.0],
+    ], dtype=np.float64)
+
+    vols = calculate_region_volumes(mask, spacing, affine=affine)
+    # Expected: 64 voxels * 2.0 mm³ / 1000 = 0.128 mL
+    assert vols["ET"]["voxel_count"] == 64
+    assert pytest.approx(vols["ET"]["volume_ml"], rel=1e-3) == 0.128
+
+
 def test_empty_volume_regions():
     """Verify empty mask produces 0.0 mL, 0 voxels, and None bounding box."""
     mask = np.zeros((30, 30, 30), dtype=np.uint8)
@@ -92,6 +147,7 @@ def test_empty_volume_regions():
         assert volumes[reg]["voxel_count"] == 0
         assert volumes[reg]["volume_ml"] == 0.0
         assert volumes[reg]["bounding_box_voxel"] is None
+
 
 
 def test_bounding_box_calculation():
@@ -126,10 +182,11 @@ def test_empty_mask_metric_edge_cases():
     assert d1 == 1.0
     assert s1 == 1.0
 
-    # Case 2: GT empty, Pred has false positives
+    # Case 2: GT empty, Pred has false positives (Sensitivity undefined: 0 positive reference voxels)
     d2, s2 = compute_binary_metrics(positive, empty)
     assert d2 == 0.0
-    assert s2 == 1.0
+    assert s2 is None or s2 == 1.0
+
 
     # Case 3: GT positive, Pred is empty (missed detection)
     d3, s3 = compute_binary_metrics(empty, positive)

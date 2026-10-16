@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container-low": "#eff4ff", "on-primary": "#ffffff", "tertiary-fixed-dim": "#69d4f8", "on-primary-fixed-variant": "#00429a", "on-background": "#0b1c30", "on-error": "#ffffff", "secondary-fixed-dim": "#aec6ff", "surface-container-high": "#dce9ff", "primary": "#0056c4", "on-secondary-fixed": "#001a42", "tertiary-container": "#007f9d", "on-error-container": "#93000a", "background": "#f8f9ff", "secondary-fixed": "#d8e2ff", "inverse-primary": "#b0c6ff", "secondary": "#115abf", "on-secondary": "#ffffff", "primary-fixed-dim": "#b0c6ff", "on-primary-fixed": "#001944", "tertiary-fixed": "#b7eaff", "surface-container-lowest": "#ffffff", "on-tertiary-fixed": "#001f28", "on-secondary-fixed-variant": "#004396", "on-primary-container": "#fefcff", "on-surface-variant": "#424654", "on-secondary-container": "#002e6b", "surface-tint": "#0058c9", "surface-container-highest": "#d3e4fe", "surface-bright": "#f8f9ff", "on-tertiary": "#ffffff", "primary-container": "#196eef", "on-tertiary-container": "#fafdff", "error": "#ba1a1a", "surface-variant": "#d3e4fe", "surface-container": "#e5eeff", "on-surface": "#0b1c30", "tertiary": "#00647c", "surface": "#f8f9ff", "primary-fixed": "#d9e2ff", "surface-dim": "#cbdbf5", "inverse-surface": "#213145", "secondary-container": "#6096fe", "on-tertiary-fixed-variant": "#004e61", "inverse-on-surface": "#eaf1ff", "outline-variant": "#c2c6d7", "outline": "#727786", "error-container": "#ffdad6" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "1rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter": "0.75rem", "gutter-md": "1rem", "space-lg": "1rem", "margin-md": "1.5rem", "space-md": "0.75rem", "space-xl": "1.5rem" }, "fontFamily": { "label-sm": ["JetBrains Mono"], "headline-sm": ["Inter"], "body-md": ["Inter"], "label-lg": ["JetBrains Mono"], "label-md": ["JetBrains Mono"], "headline-md": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-lg": ["Inter"] }, "fontSize": { "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "label-lg": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "label-md": ["11px", { "lineHeight": "16px", "fontWeight": "500" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-outline-variant"><div class="h-16 w-full px-gutter-md flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md"><img alt="NeuroScope 3D Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XKzK9K3auDJWQb2cVByjB5VHa7tO7ZaiyVv-KwrgfkkaIaNrtqqGdy1psMN9cJXnT2JXL_K4BFl60aJEvQPt_ZrfBcLrpdtViE_4qzx6xxgAwDJtVC-mWh7Whiqsbwd-DxNqYoTsAG-MneGbfw2goRa6vW0EK-TZwAUfzJW_q5VhchuWvj4atGB21d-uwJJy9WdlFoXJy4YzZ4Fmmap9YPGyTCOOXXJ3o1LtTJF_BNsFgoYgj8MkVWlw"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">NeuroScope 3D</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1 tracking-wider">MONAI SegResNet Multimodal Brain MRI Pipeline</span></div></div><nav class="flex items-center gap-space-xs" data-active-classes="bg-primary text-on-primary font-body-sm font-semibold rounded"><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="workstation-multiplanar" href="#">Workstation (Multiplanar)</a><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="provenance-and-audit-report" href="#">Provenance &amp; Audit Report</a><a class="px-space-md py-space-xs font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors rounded" data-path="case-validation-diagnostics" href="#">Case Validation (Diagnostics)</a></nav><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><div class="flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-low border border-outline-variant rounded"><span class="w-2 h-2 rounded-full bg-primary inline-block"></span><span class="font-label-sm text-label-sm text-on-surface">FastAPI Connected</span></div><div class="px-space-sm py-1 bg-secondary-container text-on-surface font-label-sm text-label-sm rounded font-medium">SegResNet Ready</div><div class="px-space-sm py-1 bg-surface-container border border-outline-variant text-on-surface-variant font-label-sm text-label-sm rounded font-mono">#main-8f3a1b</div><button class="px-space-sm py-1 bg-surface-container-lowest border border-outline-variant hover:border-primary text-on-surface font-label-sm text-label-sm rounded transition-colors" type="button">Reset Study</button></div><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm"><div class="text-right"><div class="font-body-sm text-body-sm font-medium text-on-surface leading-tight">Dr. Elena Rostova</div><div class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Lead Neuro-Radiologist</div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div><div class="w-full bg-[#F2F7A0] border-l-4 border-l-primary border-y border-y-[#E4EB78] px-gutter-md py-1.5 flex items-center justify-between"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-on-surface text-[16px]">warning</span><span class="font-label-md text-label-md text-[#0F172A] uppercase font-semibold tracking-wide">RESEARCH AND EDUCATION PROTOTYPE ONLY: This software does not provide medical diagnoses, treatment planning, or clinical decisions. Not FDA cleared.</span></div><div class="font-label-sm text-label-sm text-[#0F172A] font-mono">DICOM 3.0 / NIfTI V2</div></div></header><aside class="fixed left-0 top-[94px] bottom-0 w-64 bg-surface-container-lowest border-r border-outline-variant z-40 flex flex-col justify-between p-space-md"><div class="flex flex-col gap-space-md"><div class="px-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Series Explorer</div><nav class="flex flex-col gap-space-xs" data-active-classes="bg-surface-container-high text-on-surface font-semibold"><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>T1-Weighted Contrast (T1CE)</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>T2 FLAIR Volumetric</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="workstation-multiplanar" href="#"><span>Diffusion Trace (DWI/ADC)</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">60 SL</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors border border-transparent hover:border-outline-variant" data-path="case-validation-diagnostics" href="#"><span>Pre-op Baseline Co-reg</span><span class="font-label-sm text-label-sm bg-surface-container px-1 rounded">155 SL</span></a></nav><div class="h-px bg-outline-variant my-space-xs"></div><div class="px-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Segmentation Layers</div><div class="flex flex-col gap-1.5 px-space-xs"><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-[#F2F7A0] text-[#0F172A] border border-[#E4EB78] rounded"><span>Enhancing Tumor (ET)</span><span class="font-mono">18.4 cm³</span></div><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-tertiary-fixed text-[#0F172A] border border-outline-variant rounded"><span>Necrotic Core (NCR)</span><span class="font-mono">6.1 cm³</span></div><div class="flex items-center justify-between font-label-sm text-label-sm p-1.5 bg-surface-container text-on-surface-variant border border-outline-variant rounded"><span>Peritumoral Edema (ED)</span><span class="font-mono">34.8 cm³</span></div></div></div><div class="border-t border-outline-variant pt-space-md flex flex-col gap-space-xs font-label-sm text-label-sm text-on-surface-variant"><div class="flex justify-between"><span>Inference Device</span><span class="font-mono text-on-surface font-semibold">CUDA:0 (A100)</span></div><div class="flex justify-between"><span>Resolution</span><span class="font-mono text-on-surface">1.0 × 1.0 × 1.0 mm</span></div><div class="flex justify-between"><span>Pipeline Latency</span><span class="font-mono text-on-surface">1.42s</span></div></div></aside><div class="pl-64"><main class="relative pt-[94px] w-full min-h-screen bg-background"><div class="flex flex-col w-full p-gutter-md space-y-space-md">
+<!-- Medical Research Report Header Card -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-md">
+<div>
+<div class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-semibold">Institutional Validation Log</div>
+<div class="font-headline-md text-headline-md text-on-surface tracking-tight mt-0.5">St. Mark's University Hospital — Neuro-Oncology Advanced Imaging Lab</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant mt-1">Certified Segmentation Audit Record · Clinical Protocol <span class="font-label-sm text-label-sm text-on-surface font-semibold">BraTS-AI-2025</span></div>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">verified</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold">STATE: RECORD LOCKED</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">NON-MUTABLE AUDIT TRAIL</span>
+</div>
+</div>
+</div>
+<!-- Metadata Matrix -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-space-sm py-space-md bg-surface-container-low p-space-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Case Identifier</span>
+<span class="font-label-md text-label-md text-on-surface font-mono font-semibold mt-0.5">CASE_BraTS21_00492</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Patient Anonymized Hash</span>
+<span class="font-label-md text-label-md text-on-surface font-mono mt-0.5">ANON-PT-98102-X9</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Execution Timestamp</span>
+<span class="font-label-md text-label-md text-on-surface font-mono mt-0.5">2025-02-23 14:32:08 UTC</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Compute Hardware</span>
+<span class="font-label-md text-label-md text-on-surface font-mono mt-0.5">18.4s · T4 (CUDA 12.2)</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Licensed Operator</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold mt-0.5 truncate">Dr. Elena Rostova, MD</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Department</span>
+<span class="font-body-sm text-body-sm text-on-surface mt-0.5 truncate">Neuroradiology &amp; AI</span>
+</div>
+</div>
+<!-- Research Disclaimer Box -->
+<div class="mt-space-md p-space-md bg-[#F2F7A0] flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[#0F172A] text-[20px] mt-0.5 shrink-0">report_problem</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-[#0F172A] font-bold uppercase tracking-wide">RESEARCH USE ONLY — LEVEL 3 CLASSIFICATION</span>
+<span class="font-body-sm text-body-sm text-[#0F172A] mt-0.5">Audit record generated strictly for clinical research and algorithmic validation under trial protocol BraTS-AI-2025. This document does not constitute a clinical diagnostic report, prescription, or therapeutic intervention guideline. Not FDA cleared.</span>
+</div>
+</div>
+</div>
+<!-- Section 1: Cryptographic Data Provenance & Integrity -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 bg-primary inline-block"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Section 1: Cryptographic Data Provenance &amp; Integrity</h2>
+</div>
+<div class="font-label-sm text-label-sm bg-surface-container px-space-sm py-1 font-mono text-on-surface font-semibold">
+        SEED: 42 (Reproducibility Guaranteed)
+      </div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+      Prior to model pipeline inference, SHA-256 and MD5 integrity hashes were cryptographically computed and cross-verified against clinical warehouse custody manifests.
+    </p>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-sm text-label-sm uppercase">
+<th class="py-2.5 px-3">Volume Entity</th>
+<th class="py-2.5 px-3">Format / Modality</th>
+<th class="py-2.5 px-3 font-mono">Payload Size</th>
+<th class="py-2.5 px-3 font-mono">SHA-256 Digest</th>
+<th class="py-2.5 px-3 font-mono">MD5 Checksum</th>
+<th class="py-2.5 px-3 text-right">Integrity Verification</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-label-md text-label-md font-mono">
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">T1 Native Volume</td>
+<td class="py-2.5 px-3 text-on-surface-variant">NIfTI (nii.gz) · T1-3D</td>
+<td class="py-2.5 px-3">14.2 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">7f8a91c0e391bd882...8b1e42</td>
+<td class="py-2.5 px-3 text-on-surface-variant">9a3f2c6114eb</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">T1Gd Contrast (T1CE)</td>
+<td class="py-2.5 px-3 text-on-surface-variant">NIfTI (nii.gz) · Gadolinium</td>
+<td class="py-2.5 px-3">14.8 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">b41c998e12ff09a3c...a0f199</td>
+<td class="py-2.5 px-3 text-on-surface-variant">3d1e89aa45b2</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">T2-Weighted Volume</td>
+<td class="py-2.5 px-3 text-on-surface-variant">NIfTI (nii.gz) · T2-FSE</td>
+<td class="py-2.5 px-3">15.1 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">2e8b001a44e59120c...df561a</td>
+<td class="py-2.5 px-3 text-on-surface-variant">7c4a11c880de</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">FLAIR Volumetric</td>
+<td class="py-2.5 px-3 text-on-surface-variant">NIfTI (nii.gz) · Dark Fluid</td>
+<td class="py-2.5 px-3">13.9 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">89f41029ab09cd112...31ce8a</td>
+<td class="py-2.5 px-3 text-on-surface-variant">12f88df109bc</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">Ground Truth Mask (Ref)</td>
+<td class="py-2.5 px-3 text-on-surface-variant">NIfTI (nii.gz) · Multi-label</td>
+<td class="py-2.5 px-3">4.1 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">31ac094e77dd623aa...90ab12</td>
+<td class="py-2.5 px-3 text-on-surface-variant">61ba90ca881e</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-body-sm font-semibold text-on-surface">Checkpoint Model Weights</td>
+<td class="py-2.5 px-3 text-on-surface-variant">PyTorch State Dict · .pt</td>
+<td class="py-2.5 px-3">186.4 MB</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold">e89a4413ff78201b...21c009</td>
+<td class="py-2.5 px-3 text-on-surface-variant">5e89d1b643fa</td>
+<td class="py-2.5 px-3 text-right">
+<span class="inline-flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Verified
+              </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 2: Volumetric Summary & Morphometry Table -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 bg-primary inline-block"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Section 2: Volumetric Summary &amp; Morphometry Table</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Calculated Matrix: 240 × 240 × 155</span>
+</div>
+<!-- Morphometry Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container text-on-surface font-label-sm text-label-sm uppercase">
+<th class="py-2.5 px-3">Region Label</th>
+<th class="py-2.5 px-3">Channel Tag</th>
+<th class="py-2.5 px-3 font-mono text-right">Volume (mL)</th>
+<th class="py-2.5 px-3 font-mono text-right">Voxel Count (N)</th>
+<th class="py-2.5 px-3 font-mono text-right">% Brain Vol</th>
+<th class="py-2.5 px-3 font-mono">Bounding Box Min [X,Y,Z]</th>
+<th class="py-2.5 px-3 font-mono">Bounding Box Max [X,Y,Z]</th>
+<th class="py-2.5 px-3 font-mono text-right">Center of Mass (World mm)</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-label-md text-label-md font-mono">
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-body-sm font-semibold text-on-surface">Whole Tumour (WT)</td>
+<td class="py-3 px-3">
+<span class="inline-block px-2 py-0.5 bg-[#65D0F4] text-[#0F172A] font-label-sm font-bold">WT-ED+ET+NCR</span>
+</td>
+<td class="py-3 px-3 text-right font-bold text-on-surface">42.80 mL</td>
+<td class="py-3 px-3 text-right">42,800</td>
+<td class="py-3 px-3 text-right font-semibold">3.12%</td>
+<td class="py-3 px-3 text-on-surface-variant">[48, 52, 60]</td>
+<td class="py-3 px-3 text-on-surface-variant">[112, 128, 98]</td>
+<td class="py-3 px-3 text-right text-primary font-bold">(-14.2, +3.8, +36.0)</td>
+</tr>
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-body-sm font-semibold text-on-surface">Tumour Core (TC)</td>
+<td class="py-3 px-3">
+<span class="inline-block px-2 py-0.5 bg-[#578EF5] text-on-primary font-label-sm font-bold">TC-ET+NCR</span>
+</td>
+<td class="py-3 px-3 text-right font-bold text-on-surface">18.40 mL</td>
+<td class="py-3 px-3 text-right">18,400</td>
+<td class="py-3 px-3 text-right font-semibold">1.34%</td>
+<td class="py-3 px-3 text-on-surface-variant">[62, 70, 72]</td>
+<td class="py-3 px-3 text-on-surface-variant">[98, 106, 92]</td>
+<td class="py-3 px-3 text-right text-primary font-bold">(-13.0, +4.1, +35.2)</td>
+</tr>
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-body-sm font-semibold text-on-surface">Enhancing Tumour (ET)</td>
+<td class="py-3 px-3">
+<span class="inline-block px-2 py-0.5 bg-[#F2F7A0] text-[#0F172A] font-label-sm font-bold">ET-ACTIVE</span>
+</td>
+<td class="py-3 px-3 text-right font-bold text-on-surface">9.20 mL</td>
+<td class="py-3 px-3 text-right">9,200</td>
+<td class="py-3 px-3 text-right font-semibold">0.67%</td>
+<td class="py-3 px-3 text-on-surface-variant">[70, 78, 76]</td>
+<td class="py-3 px-3 text-on-surface-variant">[90, 96, 88]</td>
+<td class="py-3 px-3 text-right text-primary font-bold">(-12.4, +4.0, +35.1)</td>
+</tr>
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-3 font-body-sm font-semibold text-on-surface">Necrotic Core (NCR)</td>
+<td class="py-3 px-3">
+<span class="inline-block px-2 py-0.5 bg-outline-variant text-[#0F172A] font-label-sm font-bold">NCR-CYSTIC</span>
+</td>
+<td class="py-3 px-3 text-right font-bold text-on-surface">9.20 mL</td>
+<td class="py-3 px-3 text-right">9,200</td>
+<td class="py-3 px-3 text-right font-semibold">0.67%</td>
+<td class="py-3 px-3 text-on-surface-variant">[62, 70, 72]</td>
+<td class="py-3 px-3 text-on-surface-variant">[78, 86, 82]</td>
+<td class="py-3 px-3 text-right text-primary font-bold">(-13.6, +4.2, +35.3)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Calibration Formula Banner -->
+<div class="mt-space-md p-space-sm bg-surface-container-low flex items-center justify-between font-label-sm text-label-sm">
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-primary">functions</span>
+<span class="font-mono">Formula: Physical Volume V = N × (dx × dy × dz) / 1000 where dx=dy=dz=1.000 mm isovoxel</span>
+</div>
+<div class="text-on-surface-variant font-mono">
+        Total Evaluated Brain Volume: 1,371.8 mL
+      </div>
+</div>
+</div>
+<!-- Two-Column Grid: Model Specs & Regulatory Compliance -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+<!-- Section 3: Model Card & Architecture Specifications -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-sm pb-space-sm mb-space-sm">
+<span class="w-2.5 h-2.5 bg-primary inline-block"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Section 3: Model Card &amp; Architecture</h2>
+</div>
+<div class="space-y-space-sm font-body-sm text-body-sm mt-space-sm">
+<div class="flex justify-between py-1 bg-surface-container-low px-2">
+<span class="text-on-surface-variant">Architecture Backbone</span>
+<span class="font-mono font-semibold text-on-surface">MONAI SegResNet (Asymmetric ResUnits)</span>
+</div>
+<div class="flex justify-between py-1 px-2">
+<span class="text-on-surface-variant">Framework &amp; Torch Runtime</span>
+<span class="font-mono font-semibold text-on-surface">MONAI v1.3.1 · PyTorch 2.2.0+cu121</span>
+</div>
+<div class="flex justify-between py-1 bg-surface-container-low px-2">
+<span class="text-on-surface-variant">Pre-processing Normalization</span>
+<span class="font-mono text-on-surface">Z-score intensity per non-zero voxel sequence</span>
+</div>
+<div class="flex justify-between py-1 px-2">
+<span class="text-on-surface-variant">Spatial Resampling</span>
+<span class="font-mono text-on-surface">1.0 × 1.0 × 1.0 mm isotropic, 240×240×155</span>
+</div>
+<div class="flex justify-between py-1 bg-surface-container-low px-2">
+<span class="text-on-surface-variant">Loss Objective (Training)</span>
+<span class="font-mono text-on-surface">DiceCELoss (Squared Dice + Cross Entropy)</span>
+</div>
+<div class="flex justify-between py-1 px-2">
+<span class="text-on-surface-variant">Licensing &amp; IP</span>
+<span class="font-mono text-primary font-bold">Apache 2.0 Open Source Medical AI</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm bg-surface-container p-space-sm">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface-variant uppercase font-semibold">Inference Latency Profile</span>
+<span class="font-mono text-on-surface">Forward Pass: 1,420 ms</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 mt-2">
+<div class="bg-primary h-2" style="width: 78%;"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mt-1 font-mono">
+<span>Resample: 140ms</span>
+<span>Inference: 1,420ms</span>
+<span>Post-proc: 280ms</span>
+</div>
+</div>
+</div>
+<!-- Section 4: Regulatory Compliance & Data Lifecycle Policy -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-sm pb-space-sm mb-space-sm">
+<span class="w-2.5 h-2.5 bg-primary inline-block"></span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Section 4: Regulatory &amp; Data Lifecycle</h2>
+</div>
+<div class="space-y-space-sm mt-space-sm">
+<div class="p-space-sm bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">security</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">HIPAA / GDPR De-identification Shield</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Protected Health Information (PHI) fully scrubbed at DICOM ingestion gateway. All patient-level tags (0010,xxxx) purged; volumetric defacing algorithm applied to prevent cranial facial reconstruction.
+            </p>
+</div>
+<div class="p-space-sm bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Automated Retention &amp; Ephemeral Purge</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 font-mono">
+              Scheduled scratch-space purge: 2025-02-24 14:32:08 UTC (24-hour retention window for trial inspection compliance).
+            </p>
+</div>
+</div>
+</div>
+<!-- Digital Signature Badge -->
+<div class="mt-space-md p-space-sm bg-surface-container">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">enhanced_encryption</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase">Cryptographic Audit Signature (SHA-512)</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-mono font-bold">RSA-4096 VALID</span>
+</div>
+<div class="mt-1 font-label-sm text-label-sm font-mono text-on-surface-variant break-all">
+          9b3e18a47ffc2e0091ca54d92a019e9842f9b1772390a3c4801e099238bfdca77810ecba981240188ef71c9920194bc0281
+        </div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Bar & Document Checksum -->
+<div class="bg-surface-container-lowest p-gutter-md shadow-sm flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm font-label-md text-label-md text-on-surface font-mono">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">fingerprint</span>
+<span>Report Digest: <strong class="text-primary font-bold">c3f94a8e2910d8a1c900b217d10e</strong></span>
+</div>
+<div class="flex items-center gap-space-sm w-full md:w-auto">
+<button class="w-full md:w-auto px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold transition-colors" type="button">
+        Close Report
+      </button>
+<button class="w-full md:w-auto px-space-md py-space-sm bg-[#578EF5] hover:bg-primary text-on-primary font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+        Download Label NIfTI (.nii.gz)
+      </button>
+<button class="w-full md:w-auto px-space-md py-space-sm bg-primary hover:bg-[#1B5EC8] text-on-primary font-body-sm text-body-sm font-semibold transition-colors flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+        Download Certified PDF Report
+      </button>
+</div>
+</div>
+</div></main></div></body></html>

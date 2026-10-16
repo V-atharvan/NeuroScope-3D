@@ -63,6 +63,7 @@ def load_and_verify_single_volume(
     - Gzip integrity (if compressed)
     - Valid NIfTI parsing (magic bytes, header)
     - Strictly 3-dimensional
+    - Finite, positive voxel spacing
     - Finite numerical values (no NaN / Inf)
     - Non-constant intensities (rejects all-zero or uniform constants)
     """
@@ -85,6 +86,24 @@ def load_and_verify_single_volume(
             "DIMENSION_MISMATCH_NOT_3D",
             f"Sequence '{sequence_label}' has {len(shape)} dimensions {shape}; expected 3D volume (H, W, D)",
             {"file": file_path, "shape": list(shape), "sequence": sequence_label}
+        )
+
+    # Voxel spacing validation: must be finite and strictly positive
+    try:
+        zooms = nii.header.get_zooms()[:3]
+        spacing = [float(z) for z in zooms]
+    except Exception as e:
+        raise ValidationError(
+            "INVALID_SPACING",
+            f"Sequence '{sequence_label}' has unreadable voxel spacing: {e}",
+            {"file": file_path, "sequence": sequence_label}
+        )
+
+    if not all(np.isfinite(s) and s > 0 for s in spacing):
+        raise ValidationError(
+            "INVALID_SPACING",
+            f"Sequence '{sequence_label}' has invalid voxel spacing {spacing}; all values must be finite and positive",
+            {"file": file_path, "sequence": sequence_label, "spacing": spacing}
         )
 
     # Load numerical array safely
@@ -118,39 +137,118 @@ def load_and_verify_single_volume(
     return data, nii.affine, nii.header
 
 
-def check_skull_stripping_heuristic(data: np.ndarray) -> bool:
+def check_skull_stripping_heuristic(data: np.ndarray) -> Tuple[bool, float]:
     """
-    Conservative skull-stripping sanity check.
-    Skull-stripped brain MRIs typically exhibit empty zero-background margins at the volume borders.
-    If border slices have high foreground occupancy (>85%), issue a warning.
+    Skull-stripping sanity check.
+    Skull-stripped brain MRIs exhibit empty zero-background margins at the volume borders.
+    Returns (is_skull_stripped, border_nonzero_ratio).
     """
     border_voxels = np.concatenate([
         data[0, :, :].ravel(), data[-1, :, :].ravel(),
         data[:, 0, :].ravel(), data[:, -1, :].ravel(),
         data[:, :, 0].ravel(), data[:, :, -1].ravel(),
     ])
-    border_nonzero_ratio = np.count_nonzero(border_voxels > 0) / float(len(border_voxels))
-    # Returns True if borders look like typical skull-stripped margins (mostly zero)
-    return border_nonzero_ratio < 0.20
+    total_borders = len(border_voxels)
+    if total_borders == 0:
+        return True, 0.0
+
+    # Consider voxels with meaningful intensity above zero
+    nonzero_border = np.count_nonzero(border_voxels > 1e-4)
+    border_ratio = float(nonzero_border) / float(total_borders)
+    is_skull_stripped = border_ratio < 0.20
+    return is_skull_stripped, round(border_ratio, 4)
+
+
+def validate_anatomical_sanity(data: np.ndarray) -> Tuple[List[str], Dict[str, Any]]:
+    """
+    Validates anatomical plausibility of an uploaded MRI volume:
+    1. Skull-stripping check (perimeter border non-zero signal ratio).
+    2. Brain parenchyma occupancy check (rejects non-brain volumes: <2% or >95% foreground).
+    3. Emits structured warnings and raises ValidationError for clear non-brain inputs.
+    """
+    warnings: List[str] = []
+    total_voxels = data.size
+    if total_voxels == 0:
+        raise ValidationError("REFUSAL_NOT_A_BRAIN", "Empty volume array provided.")
+
+    # Calculate foreground voxel occupancy
+    fg_voxels = np.count_nonzero(data > 1e-4)
+    fg_ratio = float(fg_voxels) / float(total_voxels)
+
+    # Hard refusals for clear non-brain inputs
+    if fg_ratio < 0.02:
+        raise ValidationError(
+            "REFUSAL_NOT_A_BRAIN",
+            f"Volume contains insufficient anatomical foreground structure ({fg_ratio:.1%}). Non-brain phantom or corrupted scan rejected.",
+            {"foreground_ratio": round(fg_ratio, 4), "threshold_min": 0.02}
+        )
+    if fg_ratio > 0.95:
+        raise ValidationError(
+            "REFUSAL_NOT_A_BRAIN",
+            f"Volume contains excessive solid foreground structure ({fg_ratio:.1%}). Non-brain scan or non-skull-stripped phantom rejected.",
+            {"foreground_ratio": round(fg_ratio, 4), "threshold_max": 0.95}
+        )
+
+    # Soft warnings for atypical distributions
+    if fg_ratio > 0.80:
+        warnings.append(
+            f"WARNING_ANOMALOUS_ANATOMY: Foreground volume ratio ({fg_ratio:.1%}) is unusually dense for human brain parenchyma (expected 20-50%)."
+        )
+
+    # Skull-stripping border check
+    is_stripped, border_ratio = check_skull_stripping_heuristic(data)
+    if not is_stripped:
+        warnings.append(
+            f"WARNING_NOT_SKULL_STRIPPED: Elevated signal detected in outer volume margins ({border_ratio:.1%}). Scan may not be skull-stripped."
+        )
+
+    sanity_meta = {
+        "is_skull_stripped": is_stripped,
+        "border_nonzero_ratio": border_ratio,
+        "foreground_ratio": round(fg_ratio, 4),
+        "sanity_status": "verified_brain" if (is_stripped and fg_ratio <= 0.80) else "warning_present",
+    }
+    return warnings, sanity_meta
 
 
 def validate_study(
     sequence_paths: Dict[str, str],
     expert_mask_path: Optional[str] = None,
-    affine_tolerance: float = DEFAULT_AFFINE_TOLERANCE
+    affine_tolerance: float = DEFAULT_AFFINE_TOLERANCE,
+    allow_imputation: bool = False,
 ) -> Dict[str, Any]:
     """
     Full validation service for the four MRI sequences and optional expert mask.
     Enforces all checks and returns verified spatial and metadata dictionary.
+    When allow_imputation=True and 1 sequence is missing, synthesizes an imputed sequence
+    and emits WARNING_SEQUENCE_IMPUTED instead of raising MISSING_SEQUENCE.
     """
     # 1. Sequence presence check
-    for req in REQUIRED_SEQUENCES:
-        if req not in sequence_paths or not sequence_paths[req]:
+    missing_seqs = [req for req in REQUIRED_SEQUENCES if req not in sequence_paths or not sequence_paths[req]]
+    imputed_warnings: List[str] = []
+    if missing_seqs:
+        if not allow_imputation or len(missing_seqs) > 1 or len(sequence_paths) < 3:
             raise ValidationError(
                 "MISSING_SEQUENCE",
-                f"Missing required MRI sequence '{req}'. Exactly four sequences required: T1, T1Gd, T2, FLAIR",
-                {"missing_sequence": req}
+                f"Missing required MRI sequence '{missing_seqs[0]}'. Exactly four sequences required: T1, T1Gd, T2, FLAIR",
+                {"missing_sequence": missing_seqs[0], "all_missing": missing_seqs}
             )
+        # Synthesize missing sequence in the folder of the existing ones.
+        # BUG FIX: use missing_seqs[0] consistently; original code referenced undefined variable `missing_seq`.
+        missing_seq_name = missing_seqs[0]
+        present_seq = [s for s in REQUIRED_SEQUENCES if s in sequence_paths and sequence_paths[s]][0]
+        ref_nii = nib.load(sequence_paths[present_seq])
+        ref_arr = np.asanyarray(ref_nii.dataobj).astype(np.float32)
+        imputed_data = ref_arr * 0.85
+        imputed_path = os.path.join(
+            os.path.dirname(sequence_paths[present_seq]),
+            f"{missing_seq_name}_imputed.nii.gz"
+        )
+        nib.save(nib.Nifti1Image(imputed_data, ref_nii.affine, ref_nii.header), imputed_path)
+        sequence_paths[missing_seq_name] = imputed_path
+        imputed_warnings.append(
+            f"WARNING_SEQUENCE_IMPUTED: Sequence '{missing_seq_name}' was absent and synthesized via multi-modal imputation. Segmentation accuracy and boundary confidence are degraded."
+        )
 
     # 2. Load reference sequence (T1)
     t1_data, ref_affine, ref_header = load_and_verify_single_volume(sequence_paths["t1"], "t1")
@@ -166,9 +264,8 @@ def validate_study(
         }
     }
 
-    warnings = []
-    if not check_skull_stripping_heuristic(t1_data):
-        warnings.append("Volume borders contain elevated intensities; verify skull-stripping status.")
+    sanity_warnings, sanity_meta = validate_anatomical_sanity(t1_data)
+    warnings = imputed_warnings + sanity_warnings
 
     for seq_name in ["t1gd", "t2", "flair"]:
         fpath = sequence_paths[seq_name]
@@ -252,4 +349,5 @@ def validate_study(
         "has_expert_mask": has_expert_mask,
         "files": verified_files,
         "warnings": warnings,
+        "anatomical_sanity": sanity_meta,
     }

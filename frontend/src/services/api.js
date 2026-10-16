@@ -9,21 +9,30 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
  * Backend operational status and model readiness
  */
 export async function getHealth() {
-  const res = await fetch(`${API_BASE}/api/health`);
-  if (!res.ok) {
-    throw new Error(`Health check failed: ${res.statusText}`);
+  try {
+    const res = await fetch(`${API_BASE}/api/health`);
+    if (!res.ok) {
+      throw new Error(`Health check failed: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    throw new Error(`Cannot reach FastAPI backend server. Ensure backend is running at http://127.0.0.1:8000 (${err.message})`);
   }
-  return res.json();
 }
 
 /**
  * Upload 4 required MRI sequences and optional expert mask
  */
 export async function uploadStudy(formData) {
-  const res = await fetch(`${API_BASE}/api/cases`, {
-    method: 'POST',
-    body: formData,
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases`, {
+      method: 'POST',
+      body: formData,
+    });
+  } catch (netErr) {
+    throw new Error(`Cannot reach FastAPI backend server. Ensure backend is running at http://127.0.0.1:8000 (${netErr.message})`);
+  }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -40,7 +49,12 @@ export async function uploadStudy(formData) {
  * Validate case geometry
  */
 export async function validateCase(caseId) {
-  const res = await fetch(`${API_BASE}/api/cases/${caseId}/validate`);
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/validate`);
+  } catch (netErr) {
+    throw new Error(`Validation check failed: could not reach backend (${netErr.message})`);
+  }
   if (!res.ok) {
     throw new Error(`Validation request failed with HTTP ${res.status}`);
   }
@@ -51,9 +65,14 @@ export async function validateCase(caseId) {
  * Trigger real model inference
  */
 export async function triggerSegmentation(caseId) {
-  const res = await fetch(`${API_BASE}/api/cases/${caseId}/segment`, {
-    method: 'POST',
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/segment`, {
+      method: 'POST',
+    });
+  } catch (netErr) {
+    throw new Error(`Inference request failed: could not reach backend (${netErr.message})`);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = new Error(data.message || `Segmentation failed with HTTP ${res.status}`);
@@ -67,7 +86,12 @@ export async function triggerSegmentation(caseId) {
  * Check processing status
  */
 export async function getCaseStatus(caseId) {
-  const res = await fetch(`${API_BASE}/api/cases/${caseId}/status`);
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/status`);
+  } catch (netErr) {
+    throw new Error(`Failed to query case status: could not reach backend (${netErr.message})`);
+  }
   if (!res.ok) {
     throw new Error(`Failed to query case status: ${res.statusText}`);
   }
@@ -78,10 +102,15 @@ export async function getCaseStatus(caseId) {
  * Get results, volumes, metrics, and provenance
  */
 export async function getCaseResults(caseId) {
-  const res = await fetch(`${API_BASE}/api/cases/${caseId}/results`);
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/results`);
+  } catch (netErr) {
+    throw new Error(`Failed to fetch case results: could not reach backend (${netErr.message})`);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || `Failed to fetch results with HTTP ${res.status}`);
+    throw new Error(data.detail || data.message || `Failed to fetch results with HTTP ${res.status}`);
   }
   return data;
 }
@@ -95,4 +124,375 @@ export function getMaskDownloadUrl(caseId) {
 
 export function getReportDownloadUrl(caseId) {
   return `${API_BASE}/api/cases/${caseId}/report`;
+}
+
+export function getSequenceDownloadUrl(caseId, seqKey) {
+  const cleanKey = String(seqKey).replace(/\.nii(\.gz)?$/, '');
+  return `${API_BASE}/api/cases/${caseId}/sequences/${cleanKey}.nii.gz`;
+}
+
+export function getAgreementMaskUrl(caseId, region = 'WT') {
+  return `${API_BASE}/api/cases/${caseId}/agreement-mask?region=${encodeURIComponent(region)}`;
+}
+
+/**
+ * Initiates binary download of the 4-class expert agreement NIfTI volume (TP/FP/FN).
+ */
+export async function downloadAgreementMaskFile(caseId, region = 'WT') {
+  const url = getAgreementMaskUrl(caseId, region);
+  const res = await fetch(url);
+  if (!res.ok) {
+    let errMsg = `Agreement mask download failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      errMsg = errJson.detail || errJson.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  const blob = await res.blob();
+  if (blob.size === 0) {
+    throw new Error('Downloaded agreement mask is empty.');
+  }
+
+  let filename = `${caseId}_${region}_agreement.nii.gz`;
+  const disposition = res.headers.get('Content-Disposition');
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+  }
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+
+  return { filename, sizeBytes: blob.size };
+}
+
+/**
+ * Initiates binary download of the clinical provenance PDF report.
+ * Uses blob streaming to verify content before saving to the user's filesystem.
+ */
+export async function downloadReportFile(caseId) {
+  const url = getReportDownloadUrl(caseId);
+  const res = await fetch(url);
+  if (!res.ok) {
+    let errMsg = `Report download failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      errMsg = errJson.detail || errJson.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  const blob = await res.blob();
+  if (blob.size === 0) {
+    throw new Error('Downloaded PDF report is empty.');
+  }
+
+  let filename = `neuroscope3d_report_${caseId}.pdf`;
+  const disposition = res.headers.get('Content-Disposition');
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+  }
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+
+  return { filename, sizeBytes: blob.size };
+}
+
+/**
+ * Initiates binary download of the predicted BraTS 2021 segmentation mask.
+ */
+export async function downloadMaskFile(caseId) {
+  const url = getMaskDownloadUrl(caseId);
+  const res = await fetch(url);
+  if (!res.ok) {
+    let errMsg = `Mask download failed (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      errMsg = errJson.detail || errJson.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  const blob = await res.blob();
+  if (blob.size === 0) {
+    throw new Error('Downloaded segmentation mask is empty.');
+  }
+
+  let filename = `${caseId}_seg_brats2021.nii.gz`;
+  const disposition = res.headers.get('Content-Disposition');
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match && match[1]) {
+      filename = match[1];
+    }
+  }
+
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+
+  return { filename, sizeBytes: blob.size };
+}
+
+/**
+ * Load bundled sample BraTS study
+ */
+export async function loadSampleStudy() {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/sample`, {
+      method: 'POST',
+    });
+  } catch (netErr) {
+    throw new Error(`Cannot reach FastAPI backend server. Ensure backend is running at http://127.0.0.1:8000 (${netErr.message})`);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = data.message || `Sample load failed with HTTP ${res.status}`;
+    const err = new Error(errorMsg);
+    err.code = data.code || 'SAMPLE_LOAD_FAILED';
+    err.details = data.details || {};
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Upload clinical DICOM archive (.zip)
+ */
+export async function uploadDicomStudy(zipFile) {
+  const formData = new FormData();
+  formData.append('file', zipFile);
+  const res = await fetch(`${API_BASE}/api/cases/dicom`, {
+    method: 'POST',
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.message || `DICOM upload failed with HTTP ${res.status}`);
+    err.code = data.code || 'DICOM_UPLOAD_FAILED';
+    err.details = data.details || {};
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Query algorithmic uncertainty quantification profile (Shannon entropy & boundary ambiguity)
+ */
+export async function getUncertaintyProfile(caseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/uncertainty`);
+  if (!res.ok) {
+    throw new Error(`Failed to load uncertainty profile: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Query modality ablation sensitivity profile
+ */
+export async function getModalityAblation(caseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/ablation`);
+  if (!res.ok) {
+    throw new Error(`Failed to load modality ablation profile: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Query 10-case held-out benchmark cohort manifest & overlap disclosure
+ */
+export async function getCohortBenchmark() {
+  const res = await fetch(`${API_BASE}/api/evaluation/cohort`);
+  if (!res.ok) {
+    throw new Error(`Failed to load cohort benchmark: HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Compare two longitudinal timepoints for the same patient (RANO delta)
+ */
+export async function compareLongitudinalStudies(caseId, followupCaseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/longitudinal?followup_case_id=${encodeURIComponent(followupCaseId)}`, {
+    method: 'POST',
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || `Longitudinal comparison failed (HTTP ${res.status})`);
+  }
+  return data;
+}
+
+/**
+ * Get 3D surface mesh download URL
+ */
+export function getMeshDownloadUrl(caseId, region = 'WT', format = 'glb') {
+  return `${API_BASE}/api/cases/${caseId}/mesh/${region}?format=${format}`;
+}
+
+/**
+ * Download 3D polygonal surface mesh in world mm space (.glb or .obj)
+ */
+export async function downloadMeshFile(caseId, region = 'WT', format = 'glb') {
+  const url = getMeshDownloadUrl(caseId, region, format);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Mesh download failed with HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const filename = `${caseId}_${region.toLowerCase()}_mesh.${format}`;
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+  return { filename, sizeBytes: blob.size };
+}
+
+/**
+ * Get machine-readable research summary JSON URL
+ */
+export function getSummaryDownloadUrl(caseId) {
+  return `${API_BASE}/api/cases/${caseId}/summary`;
+}
+
+/**
+ * Download machine-readable research summary JSON file
+ */
+export async function downloadSummaryFile(caseId) {
+  const url = getSummaryDownloadUrl(caseId);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Summary JSON download failed with HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const filename = `neuroscope3d_summary_${caseId}.json`;
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+  return { filename, sizeBytes: blob.size };
+}
+
+/**
+ * Upload an expert reference mask to an existing case
+ */
+export async function uploadExpertMask(caseId, file) {
+  const formData = new FormData();
+  formData.append('expert_mask', file);
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/expert-mask`, {
+      method: 'POST',
+      body: formData,
+    });
+  } catch (netErr) {
+    throw new Error(`Failed to upload expert mask: could not reach backend (${netErr.message})`);
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = data.detail || data.message || `Upload failed with HTTP ${res.status}`;
+    throw new Error(errorMsg);
+  }
+  return data;
+}
+
+/**
+ * Get detailed case volumetric measurements and formulas
+ */
+export async function getCaseVolumetrics(caseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/volumetrics`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch volumetrics (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * Get quantitative evaluation against expert reference
+ */
+export async function getCaseEvaluation(caseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/evaluation`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch evaluation (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * List all active sessions in temporary storage
+ */
+export async function getActiveCases() {
+  const res = await fetch(`${API_BASE}/api/cases`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch active cases (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * Get Boundary Watch quality flags, component analysis, and slice continuity
+ */
+export async function getBoundaryWatch(caseId) {
+  const res = await fetch(`${API_BASE}/api/cases/${caseId}/boundary-watch`);
+  if (!res.ok) {
+    let errMsg = `Failed to fetch Boundary Watch flags (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      errMsg = errJson.detail || errJson.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  return res.json();
+}
+
+/**
+ * Generates an authoritative two-timepoint longitudinal research demonstration pair
+ */
+export async function loadSampleLongitudinalPair() {
+  const res = await fetch(`${API_BASE}/api/cases/sample-longitudinal-pair`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    let errMsg = `Failed to create longitudinal sample pair (HTTP ${res.status})`;
+    try {
+      const errJson = await res.json();
+      errMsg = errJson.detail || errJson.message || errMsg;
+    } catch (_) {}
+    throw new Error(errMsg);
+  }
+  return res.json();
 }

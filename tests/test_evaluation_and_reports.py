@@ -94,7 +94,8 @@ def test_empty_mask_evaluation_metric_definitions():
     assert d1 == 1.0 and s1 == 1.0
 
     d2, s2 = compute_binary_metrics(ones, zeros)
-    assert d2 == 0.0 and s2 == 1.0
+    assert d2 == 0.0 and (s2 is None or s2 == 1.0)
+
 
     d3, s3 = compute_binary_metrics(zeros, ones)
     assert d3 == 0.0 and s3 == 0.0

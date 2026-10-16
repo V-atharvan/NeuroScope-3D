@@ -39,33 +39,44 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def run_model_inference(
-    preprocessed_tensor: np.ndarray,
-    weights_path: str,
-    device_name: str = "cpu"
-) -> np.ndarray:
+# Global model cache to ensure checkpoint is loaded once per process lifetime
+_MODEL_CACHE = {}
+
+
+def clear_model_cache():
+    """Clears cached model instances from memory."""
+    global _MODEL_CACHE
+    _MODEL_CACHE.clear()
+
+
+def get_or_load_model(weights_path: str, device_name: str = "cpu"):
     """
-    Executes SegResNet model forward pass via PyTorch / MONAI.
-    Expects input shape (4, H, W, D).
-    Returns raw 3-channel logits or probabilities with shape (3, H, W, D).
+    Retrieves a cached SegResNet model or loads checkpoint once from disk.
+    Configured for evaluation mode with no gradients.
     """
     try:
         import torch
         from monai.networks.nets import SegResNet
-        from monai.inferers import SlidingWindowInferer
     except ImportError as e:
         raise RuntimeError(
             f"Missing deep learning dependency for model execution: {e}. "
             "Please ensure torch and monai are installed."
         )
 
-    if not os.path.exists(weights_path):
+    resolved_weights = os.path.abspath(weights_path)
+    actual_device_name = "cuda" if (torch.cuda.is_available() and device_name == "cuda") else "cpu"
+    cache_key = (resolved_weights, actual_device_name)
+
+    if cache_key in _MODEL_CACHE:
+        return _MODEL_CACHE[cache_key], torch.device(actual_device_name)
+
+    if not os.path.exists(resolved_weights):
         raise FileNotFoundError(
-            f"Pretrained model weights not found at '{weights_path}'. "
+            f"Pretrained model weights not found at '{resolved_weights}'. "
             "Download or specify the MONAI brats_mri_segmentation bundle weights via --weights."
         )
 
-    device = torch.device(device_name if torch.cuda.is_available() and device_name == "cuda" else "cpu")
+    device = torch.device(actual_device_name)
 
     # Instantiate SegResNet adhering strictly to bundle config
     model = SegResNet(
@@ -79,7 +90,7 @@ def run_model_inference(
     ).to(device)
 
     # Load weights
-    checkpoint = torch.load(weights_path, map_location=device)
+    checkpoint = torch.load(resolved_weights, map_location=device)
     if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
         model.load_state_dict(checkpoint["state_dict"])
     elif isinstance(checkpoint, dict) and "model" in checkpoint:
@@ -90,38 +101,100 @@ def run_model_inference(
         model = checkpoint
 
     model.eval()
+    _MODEL_CACHE[cache_key] = model
+    return model, device
 
-    # Configure sliding window inferer matching configs/inference.json
+
+def get_adaptive_roi_size(spatial_shape, max_roi=(240, 240, 160), factor=16):
+    """
+    Computes an optimal sliding window ROI size appropriate for the input volume size,
+    constrained by max_roi and aligned to factor (16) for SegResNet downsampling.
+    """
+    roi = []
+    for d, max_d in zip(spatial_shape, max_roi):
+        if d <= max_d:
+            rem = d % factor
+            aligned = d if rem == 0 else d + (factor - rem)
+            roi.append(min(aligned, max_d))
+        else:
+            roi.append(max_d)
+    return roi
+
+
+def run_model_inference(
+    preprocessed_tensor: np.ndarray,
+    weights_path: str,
+    device_name: str = "cpu"
+) -> np.ndarray:
+    """
+    Executes SegResNet model forward pass via PyTorch / MONAI.
+    Expects input shape (4, H, W, D).
+    Returns raw 3-channel logits or probabilities with shape (3, H, W, D).
+    Loads checkpoint once from cache, uses eval mode, adapts ROI size to image, and safely handles OOM.
+    """
+    try:
+        import torch
+        from monai.inferers import SlidingWindowInferer
+    except ImportError as e:
+        raise RuntimeError(
+            f"Missing deep learning dependency for model execution: {e}. "
+            "Please ensure torch and monai are installed."
+        )
+
+    model, device = get_or_load_model(weights_path=weights_path, device_name=device_name)
+
+    # Configure sliding window inferer appropriate for input volume size
+    spatial_shape = preprocessed_tensor.shape[1:]
+    roi_size = get_adaptive_roi_size(spatial_shape, max_roi=(240, 240, 160), factor=16)
+
     inferer = SlidingWindowInferer(
-        roi_size=[240, 240, 160],
+        roi_size=roi_size,
         sw_batch_size=1,
         overlap=0.5,
         mode="gaussian",
     )
 
-    input_tensor = torch.from_numpy(preprocessed_tensor).unsqueeze(0).to(device)  # shape (1, 4, H, W, D)
+    try:
+        input_tensor = torch.from_numpy(preprocessed_tensor).unsqueeze(0).to(device)  # shape (1, 4, H, W, D)
 
-    with torch.no_grad():
-        raw_output = inferer(input_tensor, model)  # shape (1, 3, H, W, D)
+        with torch.no_grad():
+            raw_output = inferer(input_tensor, model)  # shape (1, 3, H, W, D)
 
-    output_np = raw_output.squeeze(0).cpu().numpy().astype(np.float32)  # shape (3, H, W, D)
-    return output_np
+        output_np = raw_output.squeeze(0).cpu().numpy().astype(np.float32)  # shape (3, H, W, D)
+        return output_np
+    except Exception as err:
+        if "cuda" in str(device) and ("out of memory" in str(err).lower() or type(err).__name__ == "OutOfMemoryError"):
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            raise RuntimeError(
+                f"GPU Out of Memory (CUDA OOM) during model inference: {err}. "
+                "Ensure sufficient VRAM is available or switch inference device to CPU (--device cpu)."
+            )
+        raise RuntimeError(f"Error during SegResNet forward pass: {err}")
 
 
 def run_pipeline(
-    t1: str,
-    t1gd: str,
-    t2: str,
-    flair: str,
-    output: str,
+    t1: str = None,
+    t1gd: str = None,
+    t2: str = None,
+    flair: str = None,
+    output: str = None,
     weights: str = "models/brats_mri_segmentation/models/model.pt",
     device: str = "cpu",
     threshold: float = 0.5,
+    **kwargs
 ) -> str:
     """
     Main orchestrator for standalone inference.
     Executes full pipeline and writes BraTS 2021 NIfTI file on original grid.
+    Supports both standard and _path keyword arguments.
     """
+    t1 = t1 or kwargs.get("t1_path")
+    t1gd = t1gd or kwargs.get("t1gd_path") or kwargs.get("t1ce_path")
+    t2 = t2 or kwargs.get("t2_path")
+    flair = flair or kwargs.get("flair_path")
+    output = output or kwargs.get("output_path")
+    weights = weights or kwargs.get("weights_path", "models/brats_mri_segmentation/models/model.pt")
     start_time = time.time()
     sequence_paths = {"t1": t1, "t1gd": t1gd, "t2": t2, "flair": flair}
 
@@ -139,7 +212,7 @@ def run_pipeline(
     print(f"[NeuroScope 3D] Raw model output shape: {raw_channels.shape} (Channels: 0=TC, 1=WT, 2=ET)")
 
     # 3. Postprocessing: Nesting & BraTS Label Conversion
-    print(f"[NeuroScope 3D] Applying threshold {threshold}, enforcing ET ⊆ TC ⊆ WT, and mapping BraTS labels...")
+    print(f"[NeuroScope 3D] Applying threshold {threshold}, enforcing ET <= TC <= WT, and mapping BraTS labels...")
     label_map = enforce_nesting_and_convert_labels(raw_channels, threshold=threshold, is_logits=True)
 
     # 4. Restore Original Grid

@@ -47,6 +47,8 @@ class CaseUploadResponse(BaseModel):
     files: Dict[str, Any]
     validation_status: str
     spatial_summary: Optional[SpatialSummary] = None
+    warnings: Optional[List[str]] = None
+    anatomical_sanity: Optional[Dict[str, Any]] = None
     disclaimer: str = MANDATORY_DISCLAIMER
 
 
@@ -55,6 +57,8 @@ class CaseValidationResponse(BaseModel):
     is_valid: bool
     checks: Dict[str, str]
     reference_affine: Optional[List[List[float]]] = None
+    warnings: Optional[List[str]] = None
+    anatomical_sanity: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     disclaimer: str = MANDATORY_DISCLAIMER
 
@@ -82,17 +86,36 @@ class BoundingBox(BaseModel):
 class RegionVolume(BaseModel):
     voxel_count: int
     volume_ml: float
+    voxel_volume_mm3: Optional[float] = None
+    formula: Optional[str] = None
+    measurement_status: Optional[str] = None
     bounding_box_voxel: Optional[BoundingBox] = None
+    centroid_voxel: Optional[List[int]] = None
+    centroid_world_mm: Optional[List[float]] = None
 
 
 class CaseMetric(BaseModel):
-    dice: float
-    sensitivity: float
+    dice: Optional[float] = None
+    sensitivity: Optional[float] = None
+    precision: Optional[float] = None
+    specificity: Optional[float] = None
+    hd95_mm: Optional[float] = None
+    predicted_volume_ml: Optional[float] = None
+    reference_volume_ml: Optional[float] = None
+    signed_diff_ml: Optional[float] = None
+    absolute_diff_ml: Optional[float] = None
+    relative_diff_percent: Optional[float] = None
+    tp_voxels: Optional[int] = None
+    fp_voxels: Optional[int] = None
+    fn_voxels: Optional[int] = None
+    tn_voxels: Optional[int] = None
 
 
 class CaseEvaluation(BaseModel):
     available: bool
     reason: Optional[str] = None
+    alignment_status: Optional[str] = None
+    metric_conventions: Optional[Dict[str, str]] = None
     metrics: Optional[Dict[str, CaseMetric]] = None
 
 
@@ -108,6 +131,9 @@ class Provenance(BaseModel):
 class CaseOutputs(BaseModel):
     mask_url: str
     report_url: str
+    agreement_mask_url: Optional[str] = None
+    uncertainty_map_url: Optional[str] = None
+    summary_url: Optional[str] = None
 
 
 class SpatialMetadata(BaseModel):
@@ -127,6 +153,7 @@ class CaseResultsResponse(BaseModel):
     held_out_benchmark_reference: Optional[Dict[str, Any]] = None
     provenance: Provenance
     outputs: CaseOutputs
+    boundary_watch: Optional[Dict[str, Any]] = None
     disclaimer: str = MANDATORY_DISCLAIMER
 
 
