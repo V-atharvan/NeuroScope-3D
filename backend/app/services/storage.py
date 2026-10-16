@@ -197,18 +197,22 @@ def list_active_cases() -> List[Dict[str, Any]]:
 
         state_file = os.path.join(case_dir, "case_state.json")
         mtime = os.path.getmtime(case_dir)
+        has_mask = os.path.exists(os.path.join(case_dir, "predicted_seg.nii.gz")) or os.path.exists(os.path.join(case_dir, "predicted_mask.nii.gz"))
+        files_in_dir = os.listdir(case_dir) if os.path.exists(case_dir) else []
+        has_expert = os.path.exists(os.path.join(case_dir, "expert_mask.nii.gz")) or any("expert" in f.lower() for f in files_in_dir)
+
         info = {
             "case_id": item,
             "modified_timestamp": mtime,
-            "status": "ready",
-            "has_mask": os.path.exists(os.path.join(case_dir, "predicted_mask.nii.gz")),
-            "has_expert_mask": os.path.exists(os.path.join(case_dir, "expert_mask.nii.gz")),
+            "status": "completed" if has_mask else "ready",
+            "has_mask": has_mask,
+            "has_expert_mask": has_expert,
         }
         if os.path.exists(state_file):
             try:
                 with open(state_file, "r") as f:
                     meta = json.load(f)
-                    info["status"] = meta.get("status", "ready")
+                    info["status"] = meta.get("status") or ("completed" if has_mask else "ready")
                     info["validation_status"] = meta.get("validation_status", "passed")
                     info["spatial_summary"] = meta.get("spatial_summary") or meta.get("spatial_metadata")
                     info["volumes"] = meta.get("volumes")

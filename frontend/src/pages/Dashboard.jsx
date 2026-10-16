@@ -5,6 +5,7 @@ import VolumetricCards from '../components/VolumetricCards';
 import BoundaryWatchPanel from '../components/BoundaryWatchPanel';
 import EvaluationPanel from '../components/EvaluationPanel';
 import DownloadsPanel from '../components/DownloadsPanel';
+import { loadSampleStudy, triggerSegmentation, getCaseResults } from '../services/api';
 
 export default function Dashboard({
   activeCase,
@@ -22,6 +23,7 @@ export default function Dashboard({
   const [selectedCentroid, setSelectedCentroid] = useState(null);
   const [overlayMode, setOverlayMode] = useState('prediction'); // 'prediction' | 'agreement'
   const [agreementRegion, setAgreementRegion] = useState('WT'); // 'WT' | 'TC' | 'ET'
+  const [isSegmenting, setIsSegmenting] = useState(false);
   const [layerVisibility, setLayerVisibility] = useState({
     WT: true,
     TC: true,
@@ -65,6 +67,45 @@ export default function Dashboard({
   const activeSequenceLabel = seqLabels[activeSequenceKey] || 'T1CE';
   const effectiveCaseId = caseResults?.case_id || activeCase?.case_id;
 
+  const handleCalculateVolumes = async () => {
+    let caseIdToUse = effectiveCaseId;
+    setIsSegmenting(true);
+    try {
+      if (!caseIdToUse) {
+        // Load sample study and trigger inference
+        const resp = await loadSampleStudy();
+        onCaseUploaded(resp);
+        caseIdToUse = resp.case_id;
+      }
+      await triggerSegmentation(caseIdToUse);
+      const results = await getCaseResults(caseIdToUse);
+      onSegmentationCompleted(results);
+    } catch (err) {
+      console.error('Volume calculation failed:', err);
+      throw err;
+    } finally {
+      setIsSegmenting(false);
+    }
+  };
+
+  const handleLoadSampleDirect = async () => {
+    setIsSegmenting(true);
+    try {
+      const resp = await loadSampleStudy();
+      onCaseUploaded(resp);
+      await triggerSegmentation(resp.case_id);
+      const results = await getCaseResults(resp.case_id);
+      onSegmentationCompleted(results);
+    } catch (err) {
+      console.error('Failed to load sample study:', err);
+      throw err;
+    } finally {
+      setIsSegmenting(false);
+    }
+  };
+
+  const effectiveVolumes = caseResults?.regions || activeCase?.volumes || activeCase?.regions;
+
   return (
     <div className="workstation-two-column">
       {/* LEFT COLUMN: Study Ingestion, Volumetrics, Benchmarks, Export (380px fixed on desktop) */}
@@ -77,11 +118,15 @@ export default function Dashboard({
         />
 
         <VolumetricCards
-          volumes={caseResults?.regions}
+          volumes={effectiveVolumes}
           spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
           onSelectCentroid={(vox) => setSelectedCentroid([...vox])}
           layerVisibility={layerVisibility}
           onToggleLayer={handleToggleLayer}
+          onRunSegmentation={handleCalculateVolumes}
+          onLoadSample={handleLoadSampleDirect}
+          isSegmenting={isSegmenting}
+          caseId={effectiveCaseId}
         />
 
         {caseResults && (
@@ -101,7 +146,7 @@ export default function Dashboard({
           caseId={effectiveCaseId}
           evaluation={caseResults?.case_evaluation}
           benchmarkReference={caseResults?.held_out_benchmark_reference}
-          volumes={caseResults?.regions}
+          volumes={effectiveVolumes}
           onExpertMaskUploaded={handleExpertMaskUploaded}
           onActivateAgreementLens={handleActivateAgreementLens}
         />

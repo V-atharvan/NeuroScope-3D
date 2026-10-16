@@ -7,7 +7,7 @@ export default function DisclaimerBanner() {
       <div className="disclaimer-text">
         <AlertTriangle size={15} style={{ color: '#0F172A', flexShrink: 0 }} />
         <span>
-          RESEARCH AND TEACHING PROTOTYPE ONLY: This software does not provide medical diagnoses, treatment planning, or clinical decisions. Research and teaching prototype only. Not for clinical diagnosis or treatment planning. Not FDA cleared.
+          RESEARCH AND TEACHING PROTOTYPE ONLY: THIS SOFTWARE DOES NOT PROVIDE MEDICAL DIAGNOSES, TREATMENT PLANNING, OR CLINICAL DECISIONS. RESEARCH AND TEACHING PROTOTYPE ONLY. NOT FOR CLINICAL DIAGNOSIS OR TREATMENT PLANNING. NOT FDA CLEARED.
         </span>
       </div>
       <div className="disclaimer-badge">

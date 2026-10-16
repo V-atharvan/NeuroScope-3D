@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, Activity, ArrowRight, ArrowLeft, RefreshCw, Layers, TrendingUp, TrendingDown, Minus, Info, Loader2 } from 'lucide-react';
-import { getUncertaintyProfile, getModalityAblation, compareLongitudinalStudies } from '../services/api';
+import { AlertTriangle, Activity, ArrowLeft, Layers, TrendingUp, Info, Loader2 } from 'lucide-react';
+import { getUncertaintyProfile, getModalityAblation } from '../services/api';
 import DualCaseCompareViewer from './DualCaseCompareViewer';
 
 export default function UncertaintyAndLongitudinalView({ caseId, caseResults, onClose }) {
@@ -9,14 +9,13 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
   const [loadingTrust, setLoadingTrust] = useState(true);
   const [trustError, setTrustError] = useState(null);
 
-  // Longitudinal comparison state
-  const [followupCaseId, setFollowupCaseId] = useState('');
-  const [longitudinalData, setLongitudinalData] = useState(null);
-  const [loadingLongitudinal, setLoadingLongitudinal] = useState(false);
-  const [longitudinalError, setLongitudinalError] = useState(null);
-
   useEffect(() => {
-    if (!caseId) return;
+    if (!caseId) {
+      setLoadingTrust(false);
+      setUncertaintyData(null);
+      setAblationData(null);
+      return;
+    }
     setLoadingTrust(true);
     setTrustError(null);
 
@@ -34,47 +33,6 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
         setLoadingTrust(false);
       });
   }, [caseId]);
-
-  const handleCompareLongitudinal = async (e) => {
-    e.preventDefault();
-    if (!caseId || !followupCaseId.trim()) return;
-
-    setLoadingLongitudinal(true);
-    setLongitudinalError(null);
-    try {
-      const data = await compareLongitudinalStudies(caseId, followupCaseId.trim());
-      setLongitudinalData(data);
-    } catch (err) {
-      setLongitudinalError(err.message || 'Longitudinal comparison failed. Ensure both cases are completed.');
-    } finally {
-      setLoadingLongitudinal(false);
-    }
-  };
-
-  const getRanoBadge = (category) => {
-    if (category.includes('Progressive Disease')) {
-      return (
-        <span style={{ backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-          <TrendingUp size={14} />
-          {category}
-        </span>
-      );
-    }
-    if (category.includes('Partial Response')) {
-      return (
-        <span style={{ backgroundColor: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-          <TrendingDown size={14} />
-          {category}
-        </span>
-      );
-    }
-    return (
-      <span style={{ backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-        <Minus size={14} />
-        {category}
-      </span>
-    );
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1100px', margin: '0 auto', gap: '16px', padding: '16px 20px' }}>
@@ -108,7 +66,7 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
               AI Trust Profiler & Longitudinal Tracker
             </h1>
             <p style={{ fontSize: '12px', color: 'var(--on-surface-variant)', margin: '2px 0 0 0' }}>
-              Voxel-Wise Shannon Entropy • Modality-Ablation Sensitivity • Volumetric RANO Response Criteria
+              Volumetric RANO Response Criteria • Spatial Alignment • Shannon Entropy • Modality-Ablation Sensitivity
             </p>
           </div>
         </div>
@@ -117,7 +75,24 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
         </span>
       </div>
 
-      {/* PART 1: UNCERTAINTY QUANTIFICATION (TTA SHANNON ENTROPY) */}
+      {/* PART 1: CASE COMPARE & VOLUMETRIC COMPARISON CHART (NOW AT THE TOP) */}
+      <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-structural)', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <TrendingUp size={16} style={{ color: 'var(--primary-accent)' }} />
+            <h2 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#0F172A' }}>
+              Case Compare — Synchronized Dual-Study Multiplanar & 3D Inspector
+            </h2>
+          </div>
+          <span style={{ fontSize: '11px', color: '#64748B' }}>
+            Interactive Side-by-Side Viewports • Longitudinal RANO Volumetric Trajectory & Comparison Chart
+          </span>
+        </div>
+
+        <DualCaseCompareViewer defaultBaselineCaseId={caseId} />
+      </section>
+
+      {/* PART 2: UNCERTAINTY QUANTIFICATION (SHANNON ENTROPY & BOUNDARY AMBIGUITY) */}
       <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-structural)', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -131,7 +106,15 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
           </span>
         </div>
 
-        {loadingTrust ? (
+        {!caseId ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <Info size={24} style={{ color: '#94A3B8' }} />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>No Active Study Selected</span>
+            <p style={{ fontSize: '12px', color: '#64748B', margin: 0, maxWidth: '520px', lineHeight: 1.4 }}>
+              Upload a 4-sequence brain MRI study or click <strong>&quot;Load Sample BraTS Study&quot;</strong> in the Workstation to compute voxel-wise Shannon entropy and boundary ambiguity profiles.
+            </p>
+          </div>
+        ) : loadingTrust ? (
           <div style={{ padding: '24px', textAlign: 'center', color: '#64748B' }}>
             <Loader2 size={20} className="animate-spin" style={{ display: 'inline-block', marginRight: '6px' }} />
             <span>Computing boundary Shannon entropy...</span>
@@ -182,7 +165,7 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
         )}
       </section>
 
-      {/* PART 2: MODALITY-ABLATION SENSITIVITY PROFILER */}
+      {/* PART 3: MODALITY-ABLATION SENSITIVITY PROFILER (BELOW THAT) */}
       <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-structural)', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -202,7 +185,11 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
           <span>COMPUTATIONAL SENSITIVITY ESTIMATE ONLY — NOT VALIDATED CLINICAL EVIDENCE.</span>
         </div>
 
-        {ablationData?.sensitivities && (
+        {!caseId ? (
+          <div style={{ padding: '16px', textAlign: 'center', color: '#64748B', fontSize: '12px' }}>
+            No active study selected. Load a study in the Workstation to evaluate multi-sequence causal contributions.
+          </div>
+        ) : ablationData?.sensitivities ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             {['WT', 'TC', 'ET'].map((reg) => {
               const sens = ablationData.sensitivities[reg] || {};
@@ -234,24 +221,7 @@ export default function UncertaintyAndLongitudinalView({ caseId, caseResults, on
               );
             })}
           </div>
-        )}
-      </section>
-
-      {/* PART 3: CASE COMPARE — DUAL-STUDY SIDE-BY-SIDE COMPARATIVE INSPECTOR */}
-      <section style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-structural)', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <TrendingUp size={16} style={{ color: 'var(--primary-accent)' }} />
-            <h2 style={{ fontSize: '14px', fontWeight: 700, margin: 0, color: '#0F172A' }}>
-              Case Compare — Synchronized Dual-Study Multiplanar & 3D Inspector
-            </h2>
-          </div>
-          <span style={{ fontSize: '11px', color: '#64748B' }}>
-            Interactive Side-by-Side Viewports • Longitudinal RANO Volumetric Trajectory
-          </span>
-        </div>
-
-        <DualCaseCompareViewer defaultBaselineCaseId={caseId} />
+        ) : null}
       </section>
     </div>
   );

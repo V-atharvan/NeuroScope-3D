@@ -1,8 +1,22 @@
-import React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState } from 'react';
+import { Eye, EyeOff, Play, Loader2, RefreshCw, FlaskConical, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-export default function VolumetricCards({ volumes, spatialMetadata, onSelectCentroid, layerVisibility, onToggleLayer }) {
+export default function VolumetricCards({
+  volumes,
+  spatialMetadata,
+  onSelectCentroid,
+  layerVisibility,
+  onToggleLayer,
+  onRunSegmentation,
+  onLoadSample,
+  isSegmenting = false,
+  caseId = null,
+}) {
+  const [localCalculating, setLocalCalculating] = useState(false);
+  const [localError, setLocalError] = useState(null);
+
   const hasVolumes = Boolean(volumes && (volumes.WT || volumes.TC || volumes.ET));
+  const isBusy = Boolean(isSegmenting || localCalculating);
 
   const wt = volumes?.WT;
   const tc = volumes?.TC;
@@ -21,6 +35,20 @@ export default function VolumetricCards({ volumes, spatialMetadata, onSelectCent
   const voxelVolMm3 = wt?.voxel_volume_mm3 || tc?.voxel_volume_mm3 || et?.voxel_volume_mm3 || (Array.isArray(spacing) ? (spacing[0] * spacing[1] * spacing[2]) : 1.0);
   const activeFormula = wt?.formula || `V = N × |det(A_3×3)| / 1000 mL (${spacingStr} mm³)`;
 
+  const handleTriggerCalculation = async () => {
+    setLocalError(null);
+    if (onRunSegmentation) {
+      setLocalCalculating(true);
+      try {
+        await onRunSegmentation();
+      } catch (err) {
+        setLocalError(err.message || 'Failed to compute tumor volumes.');
+      } finally {
+        setLocalCalculating(false);
+      }
+    }
+  };
+
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div className="clinical-section-header">
@@ -28,22 +56,134 @@ export default function VolumetricCards({ volumes, spatialMetadata, onSelectCent
           <span className="section-number-badge">2</span>
           Volumetric Quantitation (mL)
         </h2>
-        <span className="font-mono" style={{ fontSize: '11px', color: 'var(--on-surface-variant)' }}>
-          {hasVolumes ? 'INFERENCE ACTIVE' : 'STANDBY'}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {hasVolumes && onRunSegmentation && (
+            <button
+              type="button"
+              onClick={handleTriggerCalculation}
+              disabled={isBusy}
+              title="Recalculate tumor volumes"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 6px',
+                fontSize: '10px',
+                borderRadius: '3px',
+                border: '1px solid #CBD5E1',
+                background: '#FFFFFF',
+                color: '#475569',
+                cursor: isBusy ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <RefreshCw size={10} className={isBusy ? 'spin' : ''} />
+              <span>{isBusy ? 'Calculating...' : 'Recalculate'}</span>
+            </button>
+          )}
+          <span
+            className="font-mono"
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '2px 6px',
+              borderRadius: '3px',
+              backgroundColor: hasVolumes ? '#ECFDF5' : isBusy ? '#EFF6FF' : '#F8FAFC',
+              color: hasVolumes ? '#059669' : isBusy ? '#2563EB' : 'var(--on-surface-variant)',
+              border: `1px solid ${hasVolumes ? '#A7F3D0' : isBusy ? '#BFDBFE' : '#E2E8F0'}`,
+            }}
+          >
+            {isBusy ? 'CALCULATING...' : hasVolumes ? '✓ INFERENCE ACTIVE' : 'STANDBY'}
+          </span>
+        </div>
       </div>
 
       {!hasVolumes && (
         <div style={{
-          padding: '6px 10px',
-          backgroundColor: '#F8FAFC',
-          border: '1px dashed #CBD5E1',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          padding: '10px 12px',
+          backgroundColor: isBusy ? '#EFF6FF' : '#F8FAFC',
+          border: `1px solid ${isBusy ? '#93C5FD' : '#CBD5E1'}`,
           borderRadius: 'var(--radius-sm)',
           fontSize: '11px',
-          color: '#64748B',
+          color: '#334155',
           lineHeight: 1.4
         }}>
-          Awaiting SegResNet inference — Click <strong>"Run SegResNet Segmentation"</strong> in Section 1 to compute WT, TC, and ET volumes and render color-coded 3D tumor masks.
+          {isBusy ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1D4ED8', fontWeight: 600 }}>
+              <Loader2 size={16} className="spin" />
+              <span>Computing physical tumor volumes (WT, TC, ET) via SegResNet pipeline...</span>
+            </div>
+          ) : (
+            <>
+              <div>
+                Multi-compartment physical quantitation measures exact tissue volumes in millilitres (mL) from the 3D voxel grid: <strong>WT</strong> (Whole Tumour), <strong>TC</strong> (Tumour Core), and <strong>ET</strong> (Enhancing Tumour).
+              </div>
+
+              {localError && (
+                <div style={{
+                  padding: '6px 8px',
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FECACA',
+                  borderRadius: '3px',
+                  color: '#DC2626',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '6px'
+                }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <span>{localError}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleTriggerCalculation}
+                  disabled={isBusy}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: isBusy ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <Play size={14} fill="currentColor" />
+                  <span>Calculate Tumor Volumes (mL)</span>
+                </button>
+
+                {onLoadSample && (
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={onLoadSample}
+                    disabled={isBusy}
+                    style={{
+                      width: '100%',
+                      padding: '6px 10px',
+                      fontSize: '11px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      cursor: isBusy ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    <FlaskConical size={13} />
+                    <span>Load Sample BraTS Study &amp; Calculate Volumes</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 

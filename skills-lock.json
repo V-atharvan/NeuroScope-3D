@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "better-ui": {
+      "source": "23jmo/jmo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/better-ui/SKILL.md",
+      "computedHash": "aa334c7da6ab6a226959e24f607b6ef94f599b8ee3a1bfec7885fc5f5c257742"
+    }
+  }
+}

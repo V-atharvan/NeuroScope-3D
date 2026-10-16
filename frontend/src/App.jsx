@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import DisclaimerBanner from './components/DisclaimerBanner';
 import Header from './components/Header';
 import SeriesExplorer from './components/SeriesExplorer';
 import WorkspaceContextStrip from './components/WorkspaceContextStrip';
@@ -33,8 +32,6 @@ export default function App() {
 
   const handleCaseUploaded = (uploadData) => {
     setActiveCase(uploadData);
-    setCaseResults(null);
-    setMaskUrl(null);
     setValidationError(null);
 
     // Clear local file so server-synced sequence URL is loaded
@@ -42,6 +39,22 @@ export default function App() {
     if (uploadData?.case_id) {
       setBaseScanUrl(getSequenceDownloadUrl(uploadData.case_id, 't1gd'));
       setActiveSequenceKey('t1gd');
+    }
+
+    // If upload response already includes precomputed or expert volumes, immediately populate them!
+    if (uploadData?.volumes) {
+      setCaseResults({
+        case_id: uploadData.case_id,
+        status: 'completed',
+        regions: uploadData.volumes,
+        spatial_metadata: uploadData.spatial_summary || uploadData.spatial_metadata,
+      });
+      if (uploadData.case_id) {
+        setMaskUrl(getMaskDownloadUrl(uploadData.case_id));
+      }
+    } else {
+      setCaseResults(null);
+      setMaskUrl(null);
     }
   };
 
@@ -93,10 +106,7 @@ export default function App() {
       />
 
       <div className="main-wrapper">
-        {/* 2. Mandatory FDA / Research Warning Banner */}
-        <DisclaimerBanner />
-
-        {/* 3. Conditional View Rendering */}
+        {/* Conditional View Rendering */}
         {activeTab === 'workstation' && (
           <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {/* Top Workspace Context Strip */}
@@ -111,7 +121,7 @@ export default function App() {
               <SeriesExplorer
                 activeSequenceKey={activeSequenceKey}
                 onSelectSequence={handleSelectSequence}
-                volumes={caseResults?.regions}
+                volumes={caseResults?.regions || activeCase?.volumes || activeCase?.regions}
                 caseData={activeCase}
                 runtimeSeconds={caseResults?.runtime_seconds}
               />

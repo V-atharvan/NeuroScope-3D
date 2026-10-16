@@ -554,7 +554,7 @@ export default function UploadPanel({
             gap: '6px',
             fontWeight: 500
           }}>
-            <span>👉 <strong>Next Step:</strong> Click <strong>"Run SegResNet Segmentation"</strong> below to generate 3D tumor colour coding (WT, TC, ET) and calculate exact volumes.</span>
+            <span>👉 <strong>Next Step:</strong> Click <strong>"Run SegResNet &amp; Compute Volumes"</strong> below or in Section 2 to generate 3D tumor masks and compute exact tissue volumes.</span>
           </div>
         </div>
       )}
@@ -641,14 +641,14 @@ export default function UploadPanel({
           className="btn-primary"
           onClick={handleRunSegmentation}
           disabled={!segButtonReady || (!validationPassed && !requiredReady)}
-          title={!validationPassed ? 'Upload and validate all four sequences first' : 'Run AI segmentation'}
+          title={!validationPassed ? 'Upload and validate all four sequences first' : 'Run AI segmentation and calculate physical volumes'}
         >
           {isSegmenting ? (
-            <><Loader2 size={16} className="spin" /><span>Running SegResNet Pipeline...</span></>
+            <><Loader2 size={16} className="spin" /><span>Calculating Tumor Volumes (SegResNet)...</span></>
           ) : isUploading ? (
             <><Loader2 size={16} className="spin" /><span>Waiting for Validation...</span></>
           ) : (
-            <><Play size={16} /><span>Run SegResNet Segmentation</span></>
+            <><Play size={16} /><span>Run SegResNet &amp; Compute Volumes (mL)</span></>
           )}
         </button>
 

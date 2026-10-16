@@ -442,6 +442,25 @@ export async function getCaseVolumetrics(caseId) {
 }
 
 /**
+ * Triggers or computes physical tumor volumetrics on demand (WT, TC, ET)
+ */
+export async function calculateCaseVolumes(caseId) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/cases/${caseId}/volumetrics`, {
+      method: 'POST',
+    });
+  } catch (netErr) {
+    throw new Error(`Volumetric calculation request failed: could not reach backend (${netErr.message})`);
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || `Volume calculation failed with HTTP ${res.status}`);
+  }
+  return data;
+}
+
+/**
  * Get quantitative evaluation against expert reference
  */
 export async function getCaseEvaluation(caseId) {

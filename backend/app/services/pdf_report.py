@@ -353,7 +353,9 @@ def generate_pdf_report(
 
     # B. Mandatory Safety Notice
     story.append(Paragraph(
-        f"<b>MANDATORY NOTICE:</b> {MANDATORY_DISCLAIMER} "
+        "<b>MANDATORY NOTICE:</b> RESEARCH AND TEACHING PROTOTYPE ONLY: THIS SOFTWARE DOES NOT PROVIDE MEDICAL DIAGNOSES, "
+        "TREATMENT PLANNING, OR CLINICAL DECISIONS. RESEARCH AND TEACHING PROTOTYPE ONLY. NOT FOR CLINICAL DIAGNOSIS "
+        f"OR TREATMENT PLANNING. NOT FDA CLEARED.<br/>{MANDATORY_DISCLAIMER} "
         "The segmented contours and quantitative metrics presented in this document represent automated model predictions "
         "intended exclusively for research, algorithm benchmarking, and educational review. Predictions may be inaccurate, "
         "incomplete, or anatomically misplaced. This software does not diagnose tumours, replace a board-certified radiologist, "

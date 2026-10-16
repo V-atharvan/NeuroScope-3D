@@ -166,6 +166,7 @@ export default function NiiVueViewer({
       show3Dcrosshair: true,
       isColorbar: false,
       loadingText: 'Rendering Multi-Planar Voxel Grid...',
+      isOrientCube: true,
     });
 
     async function initViewer() {
@@ -173,6 +174,10 @@ export default function NiiVueViewer({
         await nv.attachToCanvas(canvasRef.current);
         if (isCancelled) return;
         nv.setSliceType(nv.sliceTypeMultiplanar);
+        nv.setMultiplanarLayout(2); // MULTIPLANAR_TYPE.GRID = 2 (Forces 4 equal partitions)
+        nv.opts.multiplanarForceRender = true; // Always render 3D Volume in 4th partition
+        nv.opts.multiplanarPadPixels = 6;
+        nv.setCornerOrientationText(true);
 
         // Crosshair location updates synchronized across multiplanar views
         nv.onLocationChange = (data) => {
@@ -416,6 +421,10 @@ export default function NiiVueViewer({
     switch (type) {
       case 'multi':
         nv.setSliceType(nv.sliceTypeMultiplanar);
+        nv.setMultiplanarLayout(2); // 4 equal partitions (2x2 grid)
+        nv.opts.multiplanarForceRender = true;
+        nv.opts.multiplanarPadPixels = 6;
+        nv.setCornerOrientationText(true);
         break;
       case 'axial':
         nv.setSliceType(nv.sliceTypeAxial);
@@ -425,7 +434,10 @@ export default function NiiVueViewer({
         break;
       default:
         nv.setSliceType(nv.sliceTypeMultiplanar);
+        nv.setMultiplanarLayout(2);
+        nv.opts.multiplanarForceRender = true;
     }
+    nv.updateGLVolume();
   };
 
   // Handle Opacity Slider

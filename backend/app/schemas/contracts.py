@@ -49,6 +49,7 @@ class CaseUploadResponse(BaseModel):
     spatial_summary: Optional[SpatialSummary] = None
     warnings: Optional[List[str]] = None
     anatomical_sanity: Optional[Dict[str, Any]] = None
+    volumes: Optional[Dict[str, Any]] = None
     disclaimer: str = MANDATORY_DISCLAIMER
 
 

@@ -116,7 +116,7 @@ def test_reject_upload_mismatched_shape(synthetic_study_files):
     assert err["code"] == "MISMATCHED_SHAPES"
 
 
-def test_segment_safe_failure_without_weights(synthetic_study_files):
+def test_segment_safe_failure_without_weights(synthetic_study_files, monkeypatch):
     """
     Verify segmentation handles missing model weights cleanly,
     sets case status to 'failed', and never returns fabricated success.
@@ -124,8 +124,8 @@ def test_segment_safe_failure_without_weights(synthetic_study_files):
     upload_resp = client.post("/api/cases", files=synthetic_study_files)
     case_id = upload_resp.json()["case_id"]
 
-    # Point to nonexistent weights
-    os.environ["MODEL_WEIGHTS_PATH"] = "nonexistent/weights/model.pt"
+    # Point to nonexistent weights using monkeypatch so it automatically reverts
+    monkeypatch.setenv("MODEL_WEIGHTS_PATH", "nonexistent/weights/model.pt")
 
     seg_resp = client.post(f"/api/cases/{case_id}/segment")
     assert seg_resp.status_code == 500
