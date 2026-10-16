@@ -1,0 +1,69 @@
+# Python virtual environments & bytecode
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Node & Frontend build
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets (Never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Medical imaging datasets, MRI inputs, expert masks, and ground truth
+*.nii
+*.nii.gz
+*.dcm
+*.mha
+data/
+uploads/
+cases/
+temp/
+storage/
+raw_data/
+expert_masks/
+ground_truth/
+test_pack/
+hidden/
+judge_cases/
+
+# Pretrained model weights and large checkpoints (downloaded at runtime / cache)
+models/*.pt
+models/*.pth
+models/*.bin
+models/*.onnx
+*.pth
+*.pt
+
+# Generated case artefacts, temporary outputs, and exported reports
+outputs/
+artefacts/
+artifacts/
+temp_reports/
+*.pdf
+
+# IDE & OS caches
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~
