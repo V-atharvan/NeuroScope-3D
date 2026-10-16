@@ -1064,13 +1064,21 @@ def generate_pdf_report(
 
     # D. Reproducibility & Software Audit
     story.append(Paragraph("Reproducibility & Audit Record", subheading_style))
-    import torch
-    import monai
+    try:
+        import torch
+        torch_ver = f"PyTorch {torch.__version__}"
+    except ImportError:
+        torch_ver = "PyTorch (N/A)"
+    try:
+        import monai
+        monai_ver = f"MONAI {monai.__version__}"
+    except ImportError:
+        monai_ver = "MONAI (N/A)"
     import scipy
     repro_data = [
         [Paragraph("<b>Software Commit Hash:</b>", body_style), Paragraph(commit_id, mono_style)],
         [Paragraph("<b>Report Generation Timestamp:</b>", body_style), Paragraph(datetime.now(timezone.utc).isoformat(), body_style)],
-        [Paragraph("<b>Core Software Versions:</b>", body_style), Paragraph(f"PyTorch {torch.__version__} | MONAI {monai.__version__} | NiBabel {nib.__version__} | SciPy {scipy.__version__} | NumPy {np.__version__}", mono_style)],
+        [Paragraph("<b>Core Software Versions:</b>", body_style), Paragraph(f"{torch_ver} | {monai_ver} | NiBabel {nib.__version__} | SciPy {scipy.__version__} | NumPy {np.__version__}", mono_style)],
         [Paragraph("<b>Unique Case Identifier:</b>", body_style), Paragraph(case_id, mono_style)],
     ]
     repro_table = Table(repro_data, colWidths=[2.2 * inch, 5.3 * inch])

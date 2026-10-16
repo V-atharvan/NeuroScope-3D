@@ -18,8 +18,18 @@ def compute_physical_volume_ml(
     If affine matrix A is provided, voxel volume in mm³ is |det(A[:3, :3])|
     Otherwise, volume_mL = voxel_count * spacing_x * spacing_y * spacing_z / 1000
     """
-<<<<<<< HEAD
-    effective_spacing = voxel_spacing or spacing_mm or (1.0, 1.0, 1.0)
+    if voxel_spacing is not None:
+        if len(voxel_spacing) != 3:
+            raise ValueError(f"voxel_spacing must be a 3-element tuple, got {voxel_spacing}")
+        sx, sy, sz = voxel_spacing
+        if sx <= 0 or sy <= 0 or sz <= 0 or not (np.isfinite(sx) and np.isfinite(sy) and np.isfinite(sz)):
+            raise ValueError(f"voxel_spacing components must be positive finite numbers, got {voxel_spacing}")
+        effective_spacing = voxel_spacing
+    elif spacing_mm is not None:
+        effective_spacing = spacing_mm
+    else:
+        effective_spacing = (1.0, 1.0, 1.0)
+
     if affine is not None:
         try:
             det_val = abs(float(np.linalg.det(affine[:3, :3])))
@@ -35,14 +45,6 @@ def compute_physical_volume_ml(
         sx, sy, sz = effective_spacing
         single_voxel_mm3 = float(sx * sy * sz)
 
-=======
-    if voxel_spacing is None or len(voxel_spacing) != 3:
-        raise ValueError(f"voxel_spacing must be a 3-element tuple, got {voxel_spacing}")
-    sx, sy, sz = voxel_spacing
-    if sx <= 0 or sy <= 0 or sz <= 0 or not (np.isfinite(sx) and np.isfinite(sy) and np.isfinite(sz)):
-        raise ValueError(f"voxel_spacing components must be positive finite numbers, got {voxel_spacing}")
-    single_voxel_mm3 = float(sx * sy * sz)
->>>>>>> 88bbae3efca21eaa3c92160af619bcc0fb01fb82
     volume_ml = (voxel_count * single_voxel_mm3) / 1000.0
     return float(volume_ml)
 
@@ -112,8 +114,15 @@ def calculate_region_volumes(
             f"Allowed BraTS labels are: {sorted(list(ALLOWED_BRATS_LABELS))}"
         )
 
-    # Compute voxel volume in mm³
-    effective_spacing = voxel_spacing or (1.0, 1.0, 1.0)
+    if voxel_spacing is not None:
+        if len(voxel_spacing) != 3:
+            raise ValueError(f"voxel_spacing must be a 3-element tuple, got {voxel_spacing}")
+        sx, sy, sz = voxel_spacing
+        if sx <= 0 or sy <= 0 or sz <= 0 or not (np.isfinite(sx) and np.isfinite(sy) and np.isfinite(sz)):
+            raise ValueError(f"voxel_spacing components must be positive finite numbers, got {voxel_spacing}")
+        effective_spacing = voxel_spacing
+    else:
+        effective_spacing = (1.0, 1.0, 1.0)
     formula_str = "V_mL = (N * sx * sy * sz) / 1000.0"
     if affine is not None:
         try:
