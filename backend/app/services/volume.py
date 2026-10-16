@@ -15,7 +15,11 @@ def compute_physical_volume_ml(
     Computes physical volume in millilitres (mL) from voxel count and physical voxel spacing:
     volume_mL = voxel_count * spacing_x * spacing_y * spacing_z / 1000
     """
+    if voxel_spacing is None or len(voxel_spacing) != 3:
+        raise ValueError(f"voxel_spacing must be a 3-element tuple, got {voxel_spacing}")
     sx, sy, sz = voxel_spacing
+    if sx <= 0 or sy <= 0 or sz <= 0 or not (np.isfinite(sx) and np.isfinite(sy) and np.isfinite(sz)):
+        raise ValueError(f"voxel_spacing components must be positive finite numbers, got {voxel_spacing}")
     single_voxel_mm3 = float(sx * sy * sz)
     volume_ml = (voxel_count * single_voxel_mm3) / 1000.0
     return float(volume_ml)

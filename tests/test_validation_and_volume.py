@@ -106,6 +106,18 @@ def test_bounding_box_calculation():
     assert bbox["max"] == [19, 34, 44]
 
 
+def test_invalid_or_missing_voxel_spacing():
+    """Verify rejection of zero, negative, non-finite, or malformed voxel spacing."""
+    mask = np.zeros((10, 10, 10), dtype=np.uint8)
+    with pytest.raises(ValueError, match="positive finite numbers"):
+        calculate_region_volumes(mask, (0.0, 1.0, 1.0))
+    with pytest.raises(ValueError, match="positive finite numbers"):
+        calculate_region_volumes(mask, (-1.0, 1.0, 1.0))
+    with pytest.raises(ValueError, match="3-element tuple"):
+        calculate_region_volumes(mask, (1.0, 1.0)) # type: ignore
+
+
+
 # ==============================================================================
 # 2. Empty-Mask Evaluation Metrics Tests (FR-7)
 # ==============================================================================
