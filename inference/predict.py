@@ -64,19 +64,33 @@ def get_or_load_model(weights_path: str, device_name: str = "cpu"):
         )
 
     resolved_weights = os.path.abspath(weights_path)
+    if not os.path.exists(resolved_weights):
+        alt = resolved_weights.replace(".pt", ".ts") if resolved_weights.endswith(".pt") else resolved_weights.replace(".ts", ".pt")
+        if os.path.exists(alt):
+            resolved_weights = alt
+        else:
+            raise FileNotFoundError(
+                f"Pretrained model weights not found at '{resolved_weights}'. "
+                "Download or specify the MONAI brats_mri_segmentation bundle weights via --weights."
+            )
+
     actual_device_name = "cuda" if (torch.cuda.is_available() and device_name == "cuda") else "cpu"
     cache_key = (resolved_weights, actual_device_name)
 
     if cache_key in _MODEL_CACHE:
         return _MODEL_CACHE[cache_key], torch.device(actual_device_name)
 
-    if not os.path.exists(resolved_weights):
-        raise FileNotFoundError(
-            f"Pretrained model weights not found at '{resolved_weights}'. "
-            "Download or specify the MONAI brats_mri_segmentation bundle weights via --weights."
-        )
-
     device = torch.device(actual_device_name)
+
+    # If weights are TorchScript bundle (.ts), load via torch.jit.load
+    if resolved_weights.endswith(".ts"):
+        try:
+            model = torch.jit.load(resolved_weights, map_location=device)
+            model.eval()
+            _MODEL_CACHE[cache_key] = model
+            return model, device
+        except Exception:
+            pass
 
     # Instantiate SegResNet adhering strictly to bundle config
     model = SegResNet(

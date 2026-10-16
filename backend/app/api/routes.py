@@ -110,7 +110,9 @@ def health_check() -> HealthResponse:
     """Backend operational status and model readiness."""
     cleanup_expired_cases()  # Purge any cases > 24 hours
     model_device = os.getenv("MODEL_DEVICE", "cpu")
-    weights_path = os.getenv("MODEL_WEIGHTS_PATH", "models/brats_mri_segmentation/models/model.pt")
+    weights_path = os.getenv("MODEL_WEIGHTS_PATH", "models/brats_mri_segmentation/models/model.ts")
+    if not os.path.exists(weights_path) and os.path.exists(weights_path.replace(".ts", ".pt")):
+        weights_path = weights_path.replace(".ts", ".pt")
     model_loaded = os.path.exists(weights_path)
 
     return HealthResponse(
@@ -524,7 +526,9 @@ def trigger_segmentation(case_id: str):
     out_mask_path = os.path.join(case_dir, "predicted_seg.nii.gz")
     out_report_path = os.path.join(case_dir, "report.pdf")
 
-    weights_path = os.getenv("MODEL_WEIGHTS_PATH", "models/brats_mri_segmentation/models/model.pt")
+    weights_path = os.getenv("MODEL_WEIGHTS_PATH", "models/brats_mri_segmentation/models/model.ts")
+    if not os.path.exists(weights_path) and os.path.exists(weights_path.replace(".ts", ".pt")):
+        weights_path = weights_path.replace(".ts", ".pt")
     device_name = os.getenv("MODEL_DEVICE", "cpu")
 
     # Mark case state as processing
