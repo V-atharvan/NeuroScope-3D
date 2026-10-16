@@ -35,7 +35,10 @@ def generate_pdf_report(
         rightMargin=36,
         leftMargin=36,
         topMargin=36,
-        bottomMargin=36
+        bottomMargin=36,
+        title=f"NeuroScope 3D Report ({case_id})",
+        author="NeuroScope 3D Platform",
+        subject=f"{MANDATORY_DISCLAIMER}",
     )
 
     styles = getSampleStyleSheet()
@@ -208,13 +211,23 @@ def generate_pdf_report(
         ]))
         elements.append(eval_table)
         elements.append(Spacer(1, 14))
+    else:
+        elements.append(Paragraph("Case Comparison Metrics", heading_style))
+        elements.append(Paragraph(
+            "<i>Expert ground-truth mask was not supplied with this study upload. "
+            "Case-specific Dice and sensitivity metrics are omitted (never fabricated).</i>",
+            body_style
+        ))
+        elements.append(Spacer(1, 10))
 
     # 6. Model Provenance & Input Hashes
-    elements.append(Paragraph("Model Provenance & Input Audit Trail", heading_style))
+    elements.append(Paragraph("Model Provenance & Preprocessing Details", heading_style))
     prov_data = [
         [Paragraph("<b>Model Architecture:</b>", body_style), Paragraph(provenance.get("model_name", "SegResNet"), body_style)],
         [Paragraph("<b>Model License:</b>", body_style), Paragraph(provenance.get("model_license", "Apache 2.0"), body_style)],
-        [Paragraph("<b>Training Dataset:</b>", body_style), Paragraph(provenance.get("training_data_source", "BraTS 2018"), body_style)],
+        [Paragraph("<b>Training Dataset:</b>", body_style), Paragraph(provenance.get("training_data_source", "BraTS 2018 Challenge Dataset"), body_style)],
+        [Paragraph("<b>Preprocessing Details:</b>", body_style), Paragraph("Nonzero z-score normalization; channel order [0: T1Gd, 1: T1, 2: T2, 3: FLAIR]; 1mm isotropic reference.", body_style)],
+        [Paragraph("<b>Training/Eval Overlap:</b>", body_style), Paragraph("Pretrained on BraTS 2018. Historical BraTS cases may overlap with re-indexed datasets; patient-level splitting is required.", body_style)],
     ]
 
     input_hashes = provenance.get("input_sha256", {})
