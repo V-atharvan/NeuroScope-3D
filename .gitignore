@@ -67,3 +67,9 @@ temp_reports/
 Thumbs.db
 *.swp
 *~
+
+# Prompts and internal hackathon instructions
+*Prompt*.md
+*prompt*.md
+NeuroScope3D_Base_Antigravity_Prompts.md
+
