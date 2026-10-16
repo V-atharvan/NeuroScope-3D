@@ -11,13 +11,14 @@
 Inspecting high-dimensional MRI scans across multiple imaging sequences can make it difficult for medical trainees and imaging researchers to form an accurate mental 3D model of suspected tumour volumes. Calculating tissue sub-region volumes, running AI segmentation, and validating models often require disparate tools and disconnected workflows.
 
 **NeuroScope 3D** provides a unified, web-based platform that:
-1. Accepts four co-registered brain MRI sequences (**T1**, **T1Gd / T1CE**, **T2**, and **FLAIR**).
+1. Accepts four co-registered brain MRI sequences (**T1**, **T1Gd / T1CE**, **T2**, and **FLAIR**) plus an optional expert mask.
 2. Executes a pretrained 3D segmentation model ([MONAI Model Zoo SegResNet](https://github.com/Project-MONAI/model-zoo/tree/dev/models/brats_mri_segmentation)).
 3. Maps predicted tumour regions back to the original physical voxel grid and affine space.
 4. Visualizes multi-planar slices (Axial, Coronal, Sagittal) and 3D regions using **NiiVue (Option A)** with synchronized crosshair navigation.
 5. Computes physical tissue volumes for **Whole Tumour (WT)**, **Tumour Core (TC)**, and **Enhancing Tumour (ET)** in millilitres ($mL$).
 6. Evaluates segmentations against an optional uploaded expert mask (Dice Similarity Coefficient & Sensitivity).
 7. Exports a verifiable provenance and PDF report (including input SHA-256 hashes, model details, code commit, and disclaimers).
+8. Protects privacy via local processing, zero external AI APIs, and an automatic 24-hour ephemeral file purge.
 
 ---
 
@@ -32,7 +33,7 @@ Inspecting high-dimensional MRI scans across multiple imaging sequences can make
 - Clinical diagnosis or therapeutic recommendations.
 - Tumour grading, genetic marker prediction, or prognosis.
 - Surgical or radiotherapy planning.
-- Processing unvetted patient scans.
+- Processing unvetted patient scans or protected health information (PHI).
 - Transmitting scan data to external commercial AI APIs or third-party cloud servers.
 
 ---
@@ -41,22 +42,24 @@ Inspecting high-dimensional MRI scans across multiple imaging sequences can make
 
 ```text
 NeuroScope-3D/
-├── docs/                               # Project requirements and interface specifications
+├── docs/                               # Architecture, models, reports & checklists
 │   ├── PRD_BASE.md                     # Base shared product requirements
 │   ├── ARCHITECTURE.md                 # Base system architecture
-│   └── API_CONTRACT.md                 # Shared REST API and data contracts
+│   ├── API_CONTRACT.md                 # Shared REST API and data contracts
+│   ├── MODEL_CARD.md                   # Pretrained MONAI SegResNet verification card
+│   ├── ACCEPTANCE_TEST_REPORT.md       # Audit report across all 15 organizer criteria
+│   └── DEMO_SCRIPT.md                  # 5-minute presentation script & viva answers
 ├── backend/                            # FastAPI backend services
 │   ├── app/
 │   │   ├── main.py                     # FastAPI application entrypoint & CORS
 │   │   ├── api/                        # HTTP routes & endpoint definitions
 │   │   ├── schemas/                    # Pydantic data models & contracts
-│   │   └── services/                   # Validation & orchestration services
-│   ├── tests/                          # Backend unit & integration tests
-│   └── requirements.txt                # Python dependencies
+│   │   └── services/                   # Validation, storage, volume & PDF services
+│   └── requirements.txt                # Python backend dependencies
 ├── frontend/                           # React + Vite web client
 │   ├── src/
-│   │   ├── components/                 # Disclaimer banner, header, controls
-│   │   ├── pages/                      # Dashboard & study workspace
+│   │   ├── components/                 # NiiVue viewer, HUD, cards, uploaders
+│   │   ├── pages/                      # Dashboard workspace
 │   │   ├── services/                   # Backend API client
 │   │   ├── App.jsx                     # Top-level application layout
 │   │   ├── main.jsx                    # React entrypoint
@@ -74,10 +77,14 @@ NeuroScope-3D/
 │   └── evaluate.py                     # Dice & Sensitivity computation
 ├── reports/                            # Provenance & PDF report generation
 │   └── README.md                       # Report layout & retention contract
+├── tests/                              # Automated test suite
+│   ├── test_acceptance.py              # Full 15-criterion organizer acceptance tests
+│   ├── test_backend_api.py             # FastAPI endpoint integration tests
+│   ├── test_validation_and_volume.py   # Failure-pack and volume calculation tests
+│   ├── test_inference_pipeline.py      # Pre/postprocessing and nesting tests
+│   └── test_evaluation_and_reports.py  # Cohort evaluation and PDF generation tests
 ├── .env.example                        # Template environment variables (no secrets)
 ├── .gitignore                          # Excludes venvs, MRI scans, weights, and caches
-├── PRD_BASE.md                         # Root base PRD copy
-├── Architecture.md                     # Root architecture document copy
 └── README.md                           # This document
 ```
 
@@ -87,7 +94,7 @@ NeuroScope-3D/
 
 ### Prerequisites
 - **Python:** 3.10+ (tested on Python 3.10 - 3.14)
-- **Node.js:** v18+ (tested on v26)
+- **Node.js:** v18+ (tested on v20+)
 - **Git**
 - Optional: NVIDIA GPU with CUDA drivers for accelerated PyTorch/MONAI inference.
 
@@ -126,38 +133,53 @@ npm run dev
 ```
 The web application is accessible at `http://localhost:5173`.
 
-### 4.3 Running Tests
+### 4.3 Running Standalone Inference (CLI)
+You can invoke the inference pipeline directly without running the web interface:
 ```bash
-# Run backend tests
-pytest backend/tests/
+python -m inference.predict \
+  --t1 path/to/case_T1.nii.gz \
+  --t1gd path/to/case_T1Gd.nii.gz \
+  --t2 path/to/case_T2.nii.gz \
+  --flair path/to/case_FLAIR.nii.gz \
+  --output path/to/predicted_labels.nii.gz \
+  --weights models/brats_mri_segmentation/models/model.pt \
+  --device cuda
+```
+*(If running on a CPU-only host, omit `--device cuda` or specify `--device cpu`.)*
+
+### 4.4 Running Automated Acceptance Tests
+```bash
+# Run the complete test suite (all unit, integration, and organizer acceptance tests):
+python -m pytest tests/ -v
 ```
 
 ---
 
-## 5. Contributor Workflow & Branching Conventions
+## 5. Environment Configuration
 
-The team is split across four core feature branches working in parallel:
+All configuration is driven by standard environment variables (see `.env.example`):
 
-| Branch Name | Primary Scope | Primary Directories |
+| Variable | Default | Purpose |
 |---|---|---|
-| `feature/ai-pipeline` | Pretrained MONAI bundle integration, channel ordering, inference CLI, BraTS label mapping, affine restoration | `inference/`, `docs/MODEL_CARD.md` |
-| `feature/backend` | Multi-sequence upload endpoint, validation service, volume computation ($V = N \times s_x \times s_y \times s_z / 1000$), PDF generation | `backend/`, `reports/` |
-| `feature/frontend` | NiiVue viewer integration (Option A), multi-planar slice controls, crosshair sync, 3D mesh rendering, upload UI | `frontend/` |
-| `feature/evaluation` | Held-out 10-case evaluation, Dice and sensitivity calculations, slice-removal & orientation invariance tests | `evaluation/` |
-
-### Rules of Engagement
-- `main` remains stable, clean, and buildable at all times.
-- Never commit raw MRI data (`.nii`, `.nii.gz`), model weights (`.pt`, `.pth`), secrets, or generated reports to Git.
-- Keep the research disclaimer visible on all views and reports.
-- Resolve any shared contract adjustments in `docs/API_CONTRACT.md` before committing.
+| `HOST` | `0.0.0.0` | Backend API bind host |
+| `PORT` | `8000` | Backend API bind port |
+| `CORS_ORIGIN` | `http://localhost:5173` | Restricted CORS origin for frontend |
+| `STORAGE_DIR` | `./storage/cases` | Local ephemeral workspace root |
+| `TEMP_RETENTION_HOURS` | `24` | Automated case purge age threshold |
+| `MODEL_WEIGHTS_PATH` | `models/brats_mri_segmentation/models/model.pt` | Path to downloaded MONAI SegResNet weights |
+| `DEVICE` | `cuda` | PyTorch compute device (`cuda` or `cpu`) |
 
 ---
 
 ## 6. Citations & Attribution
 
-1. **BraTS 2021 Dataset:**  
+1. **BraTS 2021 Benchmark:**  
    Baid, U., et al. *The RSNA-ASNR-MICCAI BraTS 2021 Benchmark on Brain Tumor Segmentation and Radiogenomic Classification.* arXiv:2107.02314 (2021). DOI: [10.7937/jc8x-9874](https://doi.org/10.7937/jc8x-9874).
-2. **MONAI Model Zoo:**  
+2. **Medical Segmentation Decathlon (MSD):**  
+   Simpson, A.L., et al. *A large annotated medical image dataset for the development and evaluation of segmentation algorithms.* Nature Communications 10, 2636 (2019). DOI: [10.1038/s41467-019-11011-3](https://doi.org/10.1038/s41467-019-11011-3).
+3. **SegResNet Architecture:**  
+   Myronenko, A. *3D MRI brain tumor segmentation using autoencoder regularization.* Brainlesion: Glioma, Multiple Sclerosis, Stroke and Traumatic Brain Injuries. Springer, Cham, 2018. arXiv: [1810.11654](https://arxiv.org/abs/1810.11654).
+4. **MONAI Model Zoo:**  
    Project MONAI: SegResNet Pre-trained Brain Tumor Segmentation Bundle. [GitHub Repository](https://github.com/Project-MONAI/model-zoo/tree/dev/models/brats_mri_segmentation).
-3. **NiiVue:**  
-   Rorden, C., et al. NiiVue: WebGL 2.0 medical image viewer. [GitHub Repository](https://github.com/niivue/niivue).
+5. **NiiVue:**  
+   Rorden, C., et al. *NiiVue: WebGL 2.0 medical image viewer.* [GitHub Repository](https://github.com/niivue/niivue).
