@@ -435,6 +435,12 @@ export default function NiiVueViewer({
       case 'axial':
         nv.setSliceType(nv.sliceTypeAxial);
         break;
+      case 'coronal':
+        nv.setSliceType(nv.sliceTypeCoronal);
+        break;
+      case 'sagittal':
+        nv.setSliceType(nv.sliceTypeSagittal);
+        break;
       case 'render':
         nv.setSliceType(nv.sliceTypeRender);
         break;
@@ -505,27 +511,51 @@ export default function NiiVueViewer({
       {/* Viewer Main Toolbar */}
       <div className="viewer-toolbar">
         {/* Viewport Switcher */}
-        <div className="segmented-control">
+        <div className="segmented-control mobile-scrollable-segmented">
           <button
             type="button"
             className={`segmented-btn ${currentSliceType === 'multi' ? 'active' : ''}`}
             onClick={() => handleSliceTypeChange('multi')}
+            title="Multiplanar 2x2 Grid"
           >
-            Multiplanar (Axial, Coronal, Sagittal)
+            <span className="desktop-inline">Multiplanar (Axial, Coronal, Sagittal)</span>
+            <span className="mobile-inline">Multi</span>
           </button>
           <button
             type="button"
             className={`segmented-btn ${currentSliceType === 'render' ? 'active' : ''}`}
             onClick={() => handleSliceTypeChange('render')}
+            title="3D Volume MIP / Surface"
           >
-            3D Volume Render
+            <span className="desktop-inline">3D Volume</span>
+            <span className="mobile-inline">3D</span>
           </button>
           <button
             type="button"
             className={`segmented-btn ${currentSliceType === 'axial' ? 'active' : ''}`}
             onClick={() => handleSliceTypeChange('axial')}
+            title="Axial Single Slice"
           >
-            Axial Full
+            <span className="desktop-inline">Axial</span>
+            <span className="mobile-inline">Ax</span>
+          </button>
+          <button
+            type="button"
+            className={`segmented-btn ${currentSliceType === 'coronal' ? 'active' : ''}`}
+            onClick={() => handleSliceTypeChange('coronal')}
+            title="Coronal Single Slice"
+          >
+            <span className="desktop-inline">Coronal</span>
+            <span className="mobile-inline">Cor</span>
+          </button>
+          <button
+            type="button"
+            className={`segmented-btn ${currentSliceType === 'sagittal' ? 'active' : ''}`}
+            onClick={() => handleSliceTypeChange('sagittal')}
+            title="Sagittal Single Slice"
+          >
+            <span className="desktop-inline">Sagittal</span>
+            <span className="mobile-inline">Sag</span>
           </button>
         </div>
 
@@ -980,8 +1010,8 @@ export default function NiiVueViewer({
           </>
         )}
 
-        {/* Actual WebGL Canvas attached to NiiVue */}
-        <canvas ref={canvasRef} className="niivue-canvas-el" />
+        {/* Actual WebGL Canvas attached to NiiVue with touch-action: none for zero mobile scroll jitter */}
+        <canvas ref={canvasRef} className="niivue-canvas-el" style={{ touchAction: 'none' }} />
       </div>
     </div>
   );

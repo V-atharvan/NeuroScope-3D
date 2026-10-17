@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import SeriesExplorer from './components/SeriesExplorer';
 import WorkspaceContextStrip from './components/WorkspaceContextStrip';
+import BottomNav from './components/BottomNav';
 import Dashboard from './pages/Dashboard';
 import ProvenanceAuditReport from './components/ProvenanceAuditReport';
 import CaseValidationDiagnostics from './components/CaseValidationDiagnostics';
@@ -12,6 +13,7 @@ import { getHealth, getMaskDownloadUrl, getSequenceDownloadUrl } from './service
 export default function App() {
   const [backendHealth, setBackendHealth] = useState(null);
   const [activeTab, setActiveTab] = useState('workstation'); // 'workstation' | 'audit' | 'diagnostics' | 'trust' | 'cohort'
+  const [workstationSubTab, setWorkstationSubTab] = useState('viewer'); // 'viewer' | 'controls' | 'series'
 
   const [activeCase, setActiveCase] = useState(null);
   const [caseResults, setCaseResults] = useState(null);
@@ -122,17 +124,25 @@ export default function App() {
               backendHealth={backendHealth}
             />
 
-            {/* Tripartite Layout: Left Sidebar + Central Workstation */}
-            <div className="app-layout-container workstation-layout">
-              <SeriesExplorer
-                activeSequenceKey={activeSequenceKey}
-                onSelectSequence={handleSelectSequence}
-                volumes={caseResults?.regions || activeCase?.volumes || activeCase?.regions}
-                caseData={activeCase}
-                runtimeSeconds={caseResults?.runtime_seconds}
-              />
+            {/* Layout: Sidebar + Central Workstation with mobile responsive classes */}
+            <div className={`app-layout-container workstation-layout mobile-subtab-${workstationSubTab}`}>
+              <div className={`series-sidebar-wrapper ${workstationSubTab === 'series' ? 'mobile-active' : 'mobile-hidden'}`}>
+                <SeriesExplorer
+                  activeSequenceKey={activeSequenceKey}
+                  onSelectSequence={(seq) => {
+                    handleSelectSequence(seq);
+                    // On mobile, after selecting a sequence, automatically return to viewer for instant visual feedback
+                    if (window.innerWidth < 1024) {
+                      setWorkstationSubTab('viewer');
+                    }
+                  }}
+                  volumes={caseResults?.regions || activeCase?.volumes || activeCase?.regions}
+                  caseData={activeCase}
+                  runtimeSeconds={caseResults?.runtime_seconds}
+                />
+              </div>
 
-              <div className="workspace-content">
+              <div className={`workspace-content ${workstationSubTab === 'series' ? 'mobile-hidden' : 'mobile-active'}`}>
                 <Dashboard
                   activeCase={activeCase}
                   caseResults={caseResults}
@@ -145,6 +155,8 @@ export default function App() {
                   onSegmentationCompleted={handleSegmentationCompleted}
                   onBaseScanSelected={handleBaseScanSelected}
                   onValidationError={handleValidationError}
+                  workstationSubTab={workstationSubTab}
+                  onWorkstationSubTabChange={setWorkstationSubTab}
                 />
               </div>
             </div>
@@ -192,6 +204,15 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Persistent Mobile & Tablet Bottom Navigation Bar (< 1024px) */}
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        workstationSubTab={workstationSubTab}
+        onWorkstationSubTabChange={setWorkstationSubTab}
+        hasValidationErrors={!!validationError}
+      />
     </div>
   );
 }

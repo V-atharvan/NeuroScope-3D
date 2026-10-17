@@ -18,7 +18,9 @@ export default function Dashboard({
   onCaseUploaded,
   onSegmentationCompleted,
   onBaseScanSelected,
-  onValidationError
+  onValidationError,
+  workstationSubTab = 'viewer',
+  onWorkstationSubTabChange,
 }) {
   const [selectedCentroid, setSelectedCentroid] = useState(null);
   const [overlayMode, setOverlayMode] = useState('prediction'); // 'prediction' | 'agreement'
@@ -101,6 +103,9 @@ export default function Dashboard({
       await triggerSegmentation(resp.case_id);
       const results = await getCaseResults(resp.case_id);
       onSegmentationCompleted(results);
+      if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+        onWorkstationSubTabChange('viewer');
+      }
     } catch (err) {
       console.error('Failed to load sample study:', err);
       throw err;
@@ -112,12 +117,40 @@ export default function Dashboard({
   const effectiveVolumes = caseResults?.regions || activeCase?.volumes || activeCase?.regions;
 
   return (
-    <div className="workstation-two-column">
+    <div className={`workstation-two-column mobile-view-${workstationSubTab}`}>
+      {/* Mobile Subtab Segmented Switcher (< 1200px) */}
+      <div className="mobile-workstation-pill-bar desktop-hidden">
+        <button
+          type="button"
+          className={`mobile-subtab-btn ${workstationSubTab === 'viewer' ? 'active' : ''}`}
+          onClick={() => onWorkstationSubTabChange && onWorkstationSubTabChange('viewer')}
+        >
+          <span>🖼️ 2D/3D Viewport</span>
+        </button>
+        <button
+          type="button"
+          className={`mobile-subtab-btn ${workstationSubTab === 'controls' ? 'active' : ''}`}
+          onClick={() => onWorkstationSubTabChange && onWorkstationSubTabChange('controls')}
+        >
+          <span>⚡ Ingest & Quantification</span>
+        </button>
+      </div>
+
       {/* LEFT COLUMN: Study Ingestion, Volumetrics, Benchmarks, Export (380px fixed on desktop) */}
-      <aside className="left-controls-col">
+      <aside className={`left-controls-col ${workstationSubTab === 'controls' ? 'mobile-col-visible' : 'mobile-col-hidden'}`}>
         <UploadPanel
-          onCaseUploaded={onCaseUploaded}
-          onSegmentationCompleted={onSegmentationCompleted}
+          onCaseUploaded={(uploadData) => {
+            onCaseUploaded(uploadData);
+            if (onWorkstationSubTabChange && window.innerWidth < 1200 && uploadData?.has_mask) {
+              onWorkstationSubTabChange('viewer');
+            }
+          }}
+          onSegmentationCompleted={(resultsData) => {
+            onSegmentationCompleted(resultsData);
+            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+              onWorkstationSubTabChange('viewer');
+            }
+          }}
           onBaseScanSelected={onBaseScanSelected}
           onValidationError={onValidationError}
         />
@@ -125,10 +158,20 @@ export default function Dashboard({
         <VolumetricCards
           volumes={effectiveVolumes}
           spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
-          onSelectCentroid={(vox) => setSelectedCentroid([...vox])}
+          onSelectCentroid={(vox) => {
+            setSelectedCentroid([...vox]);
+            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+              onWorkstationSubTabChange('viewer');
+            }
+          }}
           layerVisibility={layerVisibility}
           onToggleLayer={handleToggleLayer}
-          onRunSegmentation={handleCalculateVolumes}
+          onRunSegmentation={async () => {
+            await handleCalculateVolumes();
+            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+              onWorkstationSubTabChange('viewer');
+            }
+          }}
           onLoadSample={handleLoadSampleDirect}
           isSegmenting={isSegmenting}
           caseId={effectiveCaseId}
@@ -138,11 +181,19 @@ export default function Dashboard({
           <BoundaryWatchPanel
             caseId={caseResults.case_id}
             boundaryWatchData={caseResults.boundary_watch}
-            onNavigateToCentroid={(coords) => setSelectedCentroid([...coords])}
+            onNavigateToCentroid={(coords) => {
+              setSelectedCentroid([...coords]);
+              if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+                onWorkstationSubTabChange('viewer');
+              }
+            }}
             onNavigateToSlice={(sliceZ) => {
               const currentX = selectedCentroid?.[0] ?? 32;
               const currentY = selectedCentroid?.[1] ?? 32;
               setSelectedCentroid([currentX, currentY, sliceZ]);
+              if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+                onWorkstationSubTabChange('viewer');
+              }
             }}
           />
         )}
@@ -153,7 +204,12 @@ export default function Dashboard({
           benchmarkReference={caseResults?.held_out_benchmark_reference}
           volumes={effectiveVolumes}
           onExpertMaskUploaded={handleExpertMaskUploaded}
-          onActivateAgreementLens={handleActivateAgreementLens}
+          onActivateAgreementLens={(reg) => {
+            handleActivateAgreementLens(reg);
+            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
+              onWorkstationSubTabChange('viewer');
+            }
+          }}
         />
 
         {caseResults && (
@@ -166,7 +222,7 @@ export default function Dashboard({
       </aside>
 
       {/* RIGHT COLUMN: Interactive 2D/3D Multi-Planar Viewer Workspace */}
-      <section className="right-viewer-col">
+      <section className={`right-viewer-col ${workstationSubTab === 'viewer' ? 'mobile-col-visible' : 'mobile-col-hidden'}`}>
         <NiiVueViewer
           baseScanFile={baseScanFile}
           baseScanUrl={baseScanUrl}

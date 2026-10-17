@@ -20,12 +20,16 @@ from typing import Dict, Any, Optional, List, Tuple
 import os
 import io
 import re
+import glob
+import logging
 import tempfile
 from datetime import datetime, timezone
 
 import numpy as np
 import nibabel as nib
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -127,7 +131,7 @@ def render_slice_plane(mri_slice: np.ndarray, mask_slice: np.ndarray, target_siz
 
 def generate_slice_visualizations(
     mri_path: Optional[str],
-    mask_path: Optional[str],
+    mask_path: Optional[str] = None,
     centroid: Optional[List[int]] = None
 ) -> Optional[Dict[str, Any]]:
     """
@@ -135,21 +139,32 @@ def generate_slice_visualizations(
     suspected tumor centroid and overlays the predicted segmentation labels.
     Returns dictionary with in-memory BytesIO streams or None if rendering fails.
     """
-    if not mri_path or not mask_path:
-        return None
-    if not os.path.exists(mri_path) or not os.path.exists(mask_path):
+    if not mri_path or not os.path.exists(mri_path):
         return None
 
     try:
         mri_nii = nib.load(mri_path)
-        mask_nii = nib.load(mask_path)
         mri_data = mri_nii.get_fdata(dtype=np.float32)
-        mask_data = mask_nii.get_fdata().astype(np.uint8)
+        if mri_data.ndim != 3:
+            return None
 
-        if mri_data.ndim != 3 or mask_data.ndim != 3:
-            return None
-        if mri_data.shape != mask_data.shape:
-            return None
+        mask_data = None
+        if mask_path and os.path.exists(mask_path):
+            try:
+                mask_nii = nib.load(mask_path)
+                m_arr = mask_nii.get_fdata().astype(np.uint8)
+                if m_arr.ndim == 3 and m_arr.shape == mri_data.shape:
+                    mask_data = m_arr
+                else:
+                    logger.warning(
+                        f"Mask shape {m_arr.shape if m_arr.ndim == 3 else None} does not match MRI shape {mri_data.shape}. "
+                        "Rendering MRI anatomy without overlay."
+                    )
+            except Exception as mask_err:
+                logger.warning(f"Failed to load mask for slice overlay: {mask_err}")
+
+        if mask_data is None:
+            mask_data = np.zeros(mri_data.shape, dtype=np.uint8)
 
         # Determine centroid: provided WT centroid, tumor center of mass or volume center
         if centroid is not None and len(centroid) == 3:
@@ -204,7 +219,8 @@ def generate_slice_visualizations(
             "centroid": c,
             "world_centroid": world_c,
         }
-    except Exception:
+    except Exception as e:
+        logger.error(f"Slice visualization generation failed: {e}", exc_info=True)
         return None
 
 
@@ -403,15 +419,39 @@ def generate_pdf_report(
     story.append(Spacer(1, 4))
 
     # Slice image generation
+    case_dir = os.path.dirname(os.path.abspath(output_pdf_path)) if output_pdf_path else ""
+
     target_mri = mri_path
-    if not target_mri and files_metadata:
-        for k in ["flair", "t1gd", "t1", "t2"]:
-            if k in files_metadata and isinstance(files_metadata[k], dict) and "path" in files_metadata[k]:
-                target_mri = files_metadata[k]["path"]
-                break
+    if not target_mri or not os.path.exists(target_mri):
+        if files_metadata:
+            for k in ["flair", "t1gd", "t1ce", "t1", "t2"]:
+                if k in files_metadata and isinstance(files_metadata[k], dict) and "path" in files_metadata[k]:
+                    candidate = files_metadata[k]["path"]
+                    if os.path.exists(candidate):
+                        target_mri = candidate
+                        break
+        if (not target_mri or not os.path.exists(target_mri)) and case_dir and os.path.isdir(case_dir):
+            for pattern in ["*flair*.nii*", "*t1ce*.nii*", "*t1gd*.nii*", "*t1*.nii*", "*t2*.nii*"]:
+                matches = glob.glob(os.path.join(case_dir, pattern))
+                valid = [m for m in matches if "seg" not in os.path.basename(m).lower() and "mask" not in os.path.basename(m).lower() and not os.path.basename(m).endswith("_agreement.nii.gz")]
+                if valid:
+                    target_mri = valid[0]
+                    break
+
+    target_mask = mask_path
+    if not target_mask or not os.path.exists(target_mask):
+        if expert_mask_path and os.path.exists(expert_mask_path):
+            target_mask = expert_mask_path
+        elif case_dir and os.path.isdir(case_dir):
+            for pattern in ["predicted_seg.nii.gz", "*seg*.nii*", "*mask*.nii*"]:
+                matches = glob.glob(os.path.join(case_dir, pattern))
+                valid = [m for m in matches if os.path.exists(m) and not os.path.basename(m).endswith("_agreement.nii.gz")]
+                if valid:
+                    target_mask = valid[0]
+                    break
 
     wt_centroid = volumes.get("WT", {}).get("centroid_voxel")
-    slice_visuals = generate_slice_visualizations(target_mri, mask_path, centroid=wt_centroid)
+    slice_visuals = generate_slice_visualizations(target_mri, target_mask, centroid=wt_centroid)
 
     if slice_visuals:
         ax_img = RLImage(slice_visuals["axial"], width=2.1 * inch, height=2.1 * inch)

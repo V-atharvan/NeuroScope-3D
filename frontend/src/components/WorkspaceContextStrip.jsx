@@ -14,7 +14,7 @@ export default function WorkspaceContextStrip({
   const modelLoaded = backendHealth?.model_readiness?.loaded;
 
   return (
-    <div className="context-strip">
+    <div className="context-strip mobile-scrollable-strip">
       <div className="context-left">
         <span className="context-subject-pill">
           <span

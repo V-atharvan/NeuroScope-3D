@@ -40,7 +40,7 @@ export default function SeriesExplorer({
                   onClick={() => onSelectSequence(seq.key)}
                   title={`View ${seq.name} in viewport`}
                 >
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, paddingRight: '8px' }}>
                     {seq.name}
                   </span>
                   <span className="slice-tag">{seq.slices}</span>
