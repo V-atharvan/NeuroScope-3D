@@ -16,8 +16,19 @@ import sys
 import platform
 import numpy as np
 import nibabel as nib
-import torch
-import monai
+try:
+    import torch
+    TORCH_VER = torch.__version__
+except ImportError:
+    torch = None
+    TORCH_VER = "N/A (CPU Mode)"
+
+try:
+    import monai
+    MONAI_VER = monai.__version__
+except ImportError:
+    monai = None
+    MONAI_VER = "N/A (CPU Mode)"
 
 from evaluation.evaluate import (
     TRAINING_OVERLAP_DISCLOSURE,
@@ -36,8 +47,8 @@ def get_software_provenance() -> Dict[str, str]:
     """Captures exact runtime software versions for scientific reproducibility."""
     return {
         "python_version": sys.version.split()[0],
-        "torch_version": torch.__version__,
-        "monai_version": monai.__version__,
+        "torch_version": TORCH_VER,
+        "monai_version": MONAI_VER,
         "numpy_version": np.__version__,
         "nibabel_version": nib.__version__,
         "platform_os": platform.platform(),
