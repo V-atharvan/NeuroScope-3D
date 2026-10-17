@@ -121,6 +121,11 @@ export default function NiiVueViewer({
       if (typeof nv.resetScene === 'function') {
         nv.resetScene();
       }
+      if (currentSliceType === 'multi') {
+        nv.setMultiplanarLayout(2);
+        nv.opts.multiplanarForceRender = true;
+        nv.setCornerOrientationText(true);
+      }
       if (suggestedCrosshair && Array.isArray(suggestedCrosshair) && suggestedCrosshair.length >= 3) {
         navigateToCentroid(suggestedCrosshair);
       } else if (typeof nv.vox2frac === 'function' && volumeDims) {
@@ -761,24 +766,203 @@ export default function NiiVueViewer({
 
       {/* Viewport Canvas & HUD */}
       <div className="viewer-canvas-container">
-        {/* Top HUD Header */}
-        <div className="viewport-hud-header">
-          <span style={{ color: 'var(--tissue-wt)', fontWeight: 700 }}>
-            {currentSliceType === 'render' ? '3D VOLUME' : currentSliceType.toUpperCase()}
-          </span>
-          <span style={{ color: '#94A3B8' }}>|</span>
-          <span>
-            Z: {crosshairPos?.vox?.[2] !== undefined ? crosshairPos.vox[2] : '--'}
-            {volumeDims?.[2] ? ` / ${volumeDims[2]}` : ''}
-          </span>
-          <span style={{ color: '#94A3B8' }}>|</span>
-          <span style={{ color: 'var(--tissue-et)' }}>
-            {activeSequenceLabel}{maskUrl ? ' + MONAI Seg' : ''}
-          </span>
-        </div>
+        {/* Top HUD Header (for Single View Modes) */}
+        {currentSliceType !== 'multi' && (
+          <div className="viewport-hud-header">
+            <span style={{ color: 'var(--tissue-wt)', fontWeight: 700 }}>
+              {currentSliceType === 'render' ? '3D VOLUME' : currentSliceType.toUpperCase()}
+            </span>
+            <span style={{ color: '#94A3B8' }}>|</span>
+            <span>
+              Z: {crosshairPos?.vox?.[2] !== undefined ? crosshairPos.vox[2] : '--'}
+              {volumeDims?.[2] ? ` / ${volumeDims[2]}` : ''}
+            </span>
+            <span style={{ color: '#94A3B8' }}>|</span>
+            <span style={{ color: 'var(--tissue-et)' }}>
+              {activeSequenceLabel}{maskUrl ? ' + MONAI Seg' : ''}
+            </span>
+          </div>
+        )}
 
-        {/* Anatomical Orientation Badges (visible in 2D modes) */}
-        {currentSliceType !== 'render' && (
+        {/* 4-Quadrant Partition Grid Overlay (when in Multiplanar mode) */}
+        {currentSliceType === 'multi' && (
+          <>
+            {/* Vertical Partition Line */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: '50%',
+                width: '1px',
+                backgroundColor: 'rgba(51, 65, 85, 0.85)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}
+            />
+            {/* Horizontal Partition Line */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: '50%',
+                height: '1px',
+                backgroundColor: 'rgba(51, 65, 85, 0.85)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}
+            />
+            {/* Center Intersection Reticle */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                border: '1px solid #38BDF8',
+                backgroundColor: 'rgba(11, 15, 25, 0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 12,
+                pointerEvents: 'none'
+              }}
+            >
+              <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#38BDF8' }} />
+            </div>
+
+            {/* Partition 1 (Top-Left): CORONAL */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '8px',
+                left: '8px',
+                zIndex: 15,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                border: '1px solid #334155',
+                borderRadius: '3px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: '#38BDF8',
+                pointerEvents: 'none'
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>CORONAL</span>
+              <span style={{ color: '#64748B' }}>|</span>
+              <span style={{ color: '#E2E8F0' }}>Y: {crosshairPos?.vox?.[1] !== undefined ? crosshairPos.vox[1] : '--'}{volumeDims?.[1] ? ` / ${volumeDims[1]}` : ''}</span>
+            </div>
+
+            {/* Partition 2 (Top-Right): SAGITTAL */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                zIndex: 15,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                border: '1px solid #334155',
+                borderRadius: '3px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: '#38BDF8',
+                pointerEvents: 'none'
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>SAGITTAL</span>
+              <span style={{ color: '#64748B' }}>|</span>
+              <span style={{ color: '#E2E8F0' }}>X: {crosshairPos?.vox?.[0] !== undefined ? crosshairPos.vox[0] : '--'}{volumeDims?.[0] ? ` / ${volumeDims[0]}` : ''}</span>
+            </div>
+
+            {/* Partition 3 (Bottom-Left): AXIAL */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(50% + 8px)',
+                left: '8px',
+                zIndex: 15,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                border: '1px solid #334155',
+                borderRadius: '3px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: '#38BDF8',
+                pointerEvents: 'none'
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>AXIAL</span>
+              <span style={{ color: '#64748B' }}>|</span>
+              <span style={{ color: '#E2E8F0' }}>Z: {crosshairPos?.vox?.[2] !== undefined ? crosshairPos.vox[2] : '--'}{volumeDims?.[2] ? ` / ${volumeDims[2]}` : ''}</span>
+            </div>
+
+            {/* Partition 4 (Bottom-Right): 3D VOLUME RENDER */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(50% + 8px)',
+                right: '8px',
+                zIndex: 15,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                border: '1px solid #334155',
+                borderRadius: '3px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: '#F97316',
+                pointerEvents: 'none'
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>3D VOLUME RENDER</span>
+              <span style={{ color: '#64748B' }}>|</span>
+              <span style={{ color: '#CBD5E1' }}>MIP / Surface</span>
+            </div>
+
+            {/* Center Sequence Info Pill */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '8px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 15,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                border: '1px solid #334155',
+                borderRadius: '4px',
+                padding: '3px 12px',
+                fontSize: '10px',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--tissue-et)',
+                pointerEvents: 'none'
+              }}
+            >
+              <span>{activeSequenceLabel}{maskUrl ? ' + MONAI Seg' : ''}</span>
+            </div>
+          </>
+        )}
+
+        {/* Anatomical Orientation Badges (visible in full Axial 2D mode only) */}
+        {currentSliceType === 'axial' && (
           <>
             <span className="anatomical-badge" style={{ top: '8px', left: '50%', transform: 'translateX(-50%)' }}>
               A

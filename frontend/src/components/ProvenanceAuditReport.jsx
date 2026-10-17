@@ -1,6 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Verified, FileDown, FileText, ArrowLeft, AlertCircle, AlertTriangle } from 'lucide-react';
-import DisclaimerBanner from './DisclaimerBanner';
+import { ShieldCheck, Verified, FileDown, FileText, ArrowLeft, AlertCircle } from 'lucide-react';
 import { getMaskDownloadUrl, getReportDownloadUrl } from '../services/api';
 
 export default function ProvenanceAuditReport({
@@ -85,11 +84,6 @@ export default function ProvenanceAuditReport({
 
   return (
     <div className="audit-report-container">
-      {/* Research Disclaimer Banner */}
-      <div style={{ marginBottom: '12px' }}>
-        <DisclaimerBanner />
-      </div>
-
       {/* Institutional Validation Log Header Card */}
       <div className="audit-card">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -189,26 +183,19 @@ export default function ProvenanceAuditReport({
           {/* Research Disclaimer Box */}
           <div
             style={{
-              backgroundColor: 'var(--warning-bg)',
-              border: '1px solid var(--warning-border)',
+              backgroundColor: 'var(--surface-container-low)',
+              border: '1px solid var(--border-structural)',
               padding: '10px 14px',
               borderRadius: 'var(--radius-sm)',
-              marginTop: '6px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px'
+              marginTop: '6px'
             }}
-            role="alert"
           >
-            <AlertTriangle size={16} style={{ color: '#0F172A', flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', lineHeight: 1.4 }}>
-                RESEARCH AND TEACHING PROTOTYPE ONLY: THIS SOFTWARE DOES NOT PROVIDE MEDICAL DIAGNOSES, TREATMENT PLANNING, OR CLINICAL DECISIONS. RESEARCH AND TEACHING PROTOTYPE ONLY. NOT FOR CLINICAL DIAGNOSIS OR TREATMENT PLANNING. NOT FDA CLEARED.
-              </div>
-              <p style={{ fontSize: '11px', color: '#0F172A', marginTop: '4px', marginBottom: 0, lineHeight: 1.4 }}>
-                Audit record generated strictly for algorithmic validation and computational research. This document does not constitute a clinical diagnostic report, prescription, or therapeutic intervention guideline.
-              </p>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-surface-dark)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+              RESEARCH AND TEACHING PROTOTYPE ONLY
             </div>
+            <p style={{ fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px', marginBottom: 0, lineHeight: 1.4 }}>
+              This software does not provide medical diagnoses, treatment planning, or clinical decisions. Not FDA cleared. Full regulatory provenance and audit notices are compiled in the certified PDF report.
+            </p>
           </div>
         </div>
       </div>

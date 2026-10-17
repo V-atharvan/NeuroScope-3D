@@ -102,6 +102,16 @@ export default function DualCaseCompareViewer({
       nvA.attachToCanvas(canvasARef.current);
       nvB.attachToCanvas(canvasBRef.current);
 
+      nvA.setSliceType(nvA.sliceTypeMultiplanar);
+      nvA.setMultiplanarLayout(2); // 4 equal partitions (2x2 grid)
+      nvA.opts.multiplanarForceRender = true;
+      nvA.setCornerOrientationText(true);
+
+      nvB.setSliceType(nvB.sliceTypeMultiplanar);
+      nvB.setMultiplanarLayout(2); // 4 equal partitions (2x2 grid)
+      nvB.opts.multiplanarForceRender = true;
+      nvB.setCornerOrientationText(true);
+
       // Link location changes if syncScroll is active
       nvA.onLocationChange = (data) => {
         if (syncScroll && nvBRef.current && data?.vox && nvBRef.current.scene) {
@@ -289,9 +299,15 @@ export default function DualCaseCompareViewer({
 
     const applyType = (nv) => {
       if (!nv) return;
-      if (type === 'multi') nv.setSliceType(nv.sliceTypeMultiplanar);
+      if (type === 'multi') {
+        nv.setSliceType(nv.sliceTypeMultiplanar);
+        nv.setMultiplanarLayout(2);
+        nv.opts.multiplanarForceRender = true;
+        nv.setCornerOrientationText(true);
+      }
       else if (type === 'render') nv.setSliceType(nv.sliceTypeRender);
       else if (type === 'axial') nv.setSliceType(nv.sliceTypeAxial);
+      nv.updateGLVolume();
     };
 
     applyType(nvA);
