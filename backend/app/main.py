@@ -11,16 +11,13 @@ app = FastAPI(
 )
 
 # CORS Middleware Configuration - Allow local dev and Vercel domains
-cors_origins_env = os.getenv("CORS_ORIGINS", "")
-configured_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=configured_origins if configured_origins else ["*"],
-    allow_origin_regex=r"https://.*\.vercel\.app|https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(api_router)

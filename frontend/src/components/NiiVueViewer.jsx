@@ -290,7 +290,7 @@ export default function NiiVueViewer({
       ? getAgreementMaskUrl(caseId, agreementRegion)
       : maskUrl;
 
-    if (!targetUrl) {
+    if (!targetUrl || (caseResults && caseResults.status !== 'completed' && !isAgreement)) {
       // Clear any leftover overlay volume when switching cases or resetting
       while (nv.volumes && nv.volumes.length > 1) {
         nv.removeVolumeByIndex(1);

@@ -41,17 +41,23 @@ export default function App() {
       setActiveSequenceKey('t1gd');
     }
 
-    // If upload response already includes precomputed or expert volumes, immediately populate them!
-    if (uploadData?.volumes) {
+    // If upload response already includes precomputed or expert volumes, populate them safely
+    if (uploadData?.volumes && uploadData?.has_mask) {
       setCaseResults({
         case_id: uploadData.case_id,
         status: 'completed',
         regions: uploadData.volumes,
         spatial_metadata: uploadData.spatial_summary || uploadData.spatial_metadata,
       });
-      if (uploadData.case_id) {
-        setMaskUrl(getMaskDownloadUrl(uploadData.case_id));
-      }
+      setMaskUrl(getMaskDownloadUrl(uploadData.case_id));
+    } else if (uploadData?.volumes) {
+      setCaseResults({
+        case_id: uploadData.case_id,
+        status: uploadData.status || 'uploaded',
+        regions: uploadData.volumes,
+        spatial_metadata: uploadData.spatial_summary || uploadData.spatial_metadata,
+      });
+      setMaskUrl(null);
     } else {
       setCaseResults(null);
       setMaskUrl(null);
