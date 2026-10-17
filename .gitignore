@@ -61,6 +61,7 @@ artefacts/
 artifacts/
 temp_reports/
 *.pdf
+!reports/*.pdf
 
 # IDE & OS caches
 .vscode/

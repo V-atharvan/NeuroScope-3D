@@ -8,6 +8,28 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ||
     ? 'https://neuroscope-3d-backend.onrender.com'
     : '');
 
+async function safeParseJson(res, defaultError = 'Request failed') {
+  const contentType = res.headers?.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return await res.json().catch(() => ({}));
+  }
+  const text = await res.text().catch(() => '');
+  if (res.status === 405) {
+    throw new Error('Endpoint returned HTTP 405 Method Not Allowed. Ensure backend routing is active and not returning static HTML.');
+  }
+  if (res.status === 502 || res.status === 503 || res.status === 504) {
+    throw new Error('Backend service is waking up from sleep on Render (free tier cold start takes ~50s). Please wait a moment and retry.');
+  }
+  if (!res.ok) {
+    throw new Error(`${defaultError} (HTTP ${res.status})`);
+  }
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    throw new Error('Backend service is warming up or returned non-JSON. Please allow 30–60 seconds for Render cold start.');
+  }
+}
+
 /**
  * Backend operational status and model readiness
  */
@@ -17,9 +39,9 @@ export async function getHealth() {
     if (!res.ok) {
       throw new Error(`Health check failed: ${res.statusText}`);
     }
-    return await res.json();
+    return await safeParseJson(res, 'Health check failed');
   } catch (err) {
-    throw new Error(`Cannot reach FastAPI backend server. Ensure backend is running at http://127.0.0.1:8000 (${err.message})`);
+    throw new Error(`Cannot reach FastAPI backend server (${err.message})`);
   }
 }
 
@@ -34,10 +56,10 @@ export async function uploadStudy(formData) {
       body: formData,
     });
   } catch (netErr) {
-    throw new Error(`Cannot reach FastAPI backend server. Ensure backend is running at http://127.0.0.1:8000 (${netErr.message})`);
+    throw new Error(`Cannot reach FastAPI backend server. If using Render free tier, the backend may be cold-starting (${netErr.message})`);
   }
 
-  const data = await res.json().catch(() => ({}));
+  const data = await safeParseJson(res, 'Upload failed');
   if (!res.ok) {
     const errorMsg = data.message || `Upload failed with HTTP ${res.status}`;
     const err = new Error(errorMsg);
@@ -329,11 +351,13 @@ export async function getModalityAblation(caseId) {
  * Query 10-case held-out benchmark cohort manifest & overlap disclosure
  */
 export async function getCohortBenchmark() {
-  const res = await fetch(`${API_BASE}/api/evaluation/cohort`);
-  if (!res.ok) {
-    throw new Error(`Failed to load cohort benchmark: HTTP ${res.status}`);
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api/evaluation/cohort`);
+  } catch (netErr) {
+    throw new Error(`Cannot reach backend server. If using Render free tier, the backend may be cold-starting (takes ~50s): ${netErr.message}`);
   }
-  return res.json();
+  return await safeParseJson(res, 'Failed to load cohort benchmark');
 }
 
 /**

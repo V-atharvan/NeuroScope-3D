@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Niivue, NVImage } from '@niivue/niivue';
 import * as nifti from 'nifti-reader-js';
 import { Eye, Check, Layers, Sliders, Target, RotateCcw } from 'lucide-react';
+import { getAgreementMaskUrl } from '../services/api';
 
 function updateMaskLut(maskVol, mode, reg, layers, opacity) {
   if (!maskVol) return;
@@ -286,7 +287,7 @@ export default function NiiVueViewer({
 
     const isAgreement = overlayMode === 'agreement' && hasExpertMask && caseId;
     const targetUrl = isAgreement
-      ? `/api/cases/${caseId}/agreement-mask?region=${agreementRegion}`
+      ? getAgreementMaskUrl(caseId, agreementRegion)
       : maskUrl;
 
     if (!targetUrl) {

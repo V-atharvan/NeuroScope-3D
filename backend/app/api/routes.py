@@ -485,7 +485,7 @@ def load_sample_case():
 
         state = {
             "case_id": case_id,
-            "status": "completed" if sample_volumes else "uploaded",
+            "status": "uploaded",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "file_paths": saved_paths,
             "expert_mask_path": mask_path,
