@@ -230,45 +230,13 @@ export default function DownloadsPanel({ caseId, provenance, caseResults }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <button
           type="button"
-          onClick={handleExportPDF}
-          disabled={isGeneratingPdf}
-          className="btn-secondary"
-          style={{
-            backgroundColor: '#0F172A',
-            color: '#FFFFFF',
-            borderColor: '#0F172A',
-            cursor: isGeneratingPdf ? 'wait' : 'pointer',
-            opacity: isGeneratingPdf ? 0.75 : 1.0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '9px 12px',
-            fontSize: '12px',
-            fontWeight: 600,
-            borderRadius: '4px',
-            border: '1px solid #0F172A'
-          }}
-        >
-          {isGeneratingPdf ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              <span>Generating 4-Page Research Report...</span>
-            </>
-          ) : (
-            <>
-              <FileText size={14} />
-              <span>Export PDF Report</span>
-            </>
-          )}
-        </button>
-
-        <button
-          type="button"
           onClick={handleExportMask}
           disabled={isDownloadingMask}
           className="btn-primary"
           style={{
+            backgroundColor: '#2373F4',
+            color: '#FFFFFF',
+            border: '1px solid #2373F4',
             cursor: isDownloadingMask ? 'wait' : 'pointer',
             opacity: isDownloadingMask ? 0.75 : 1.0,
             display: 'flex',
@@ -278,7 +246,8 @@ export default function DownloadsPanel({ caseId, provenance, caseResults }) {
             padding: '9px 12px',
             fontSize: '12px',
             fontWeight: 600,
-            borderRadius: '4px'
+            borderRadius: '4px',
+            boxShadow: 'var(--shadow-sm)'
           }}
         >
           {isDownloadingMask ? (
@@ -290,6 +259,41 @@ export default function DownloadsPanel({ caseId, provenance, caseResults }) {
             <>
               <Download size={14} />
               <span>Export BraTS Label NIfTI (.nii.gz)</span>
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleExportPDF}
+          disabled={isGeneratingPdf}
+          className="btn-secondary"
+          style={{
+            backgroundColor: '#578EF5',
+            color: '#FFFFFF',
+            border: '1px solid #578EF5',
+            cursor: isGeneratingPdf ? 'wait' : 'pointer',
+            opacity: isGeneratingPdf ? 0.75 : 1.0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '9px 12px',
+            fontSize: '12px',
+            fontWeight: 600,
+            borderRadius: '4px',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          {isGeneratingPdf ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span>Generating 4-Page Research Report...</span>
+            </>
+          ) : (
+            <>
+              <FileText size={14} />
+              <span>Download Audit PDF Report</span>
             </>
           )}
         </button>

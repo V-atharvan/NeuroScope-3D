@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Niivue, NVImage } from '@niivue/niivue';
 import * as nifti from 'nifti-reader-js';
 import { Eye, Check, Layers, Sliders, Target, RotateCcw } from 'lucide-react';
-import { getAgreementMaskUrl } from '../services/api';
+import { getAgreementMaskUrl, getMaskDownloadUrl } from '../services/api';
 
 function updateMaskLut(maskVol, mode, reg, layers, opacity) {
   if (!maskVol) return;
@@ -10,9 +10,9 @@ function updateMaskLut(maskVol, mode, reg, layers, opacity) {
 
   if (mode === 'agreement') {
     const agreementLut = {
-      R: [0, 16, 239, 139],
-      G: [0, 185, 68, 92],
-      B: [0, 129, 68, 246],
+      R: [0, 34, 239, 168],
+      G: [0, 197, 68, 85],
+      B: [0, 94, 68, 247],
       A: [0, alphaVal, alphaVal, alphaVal],
       I: [0, 1, 2, 3],
       labels: ['TN (Transparent)', 'TP (Consensus)', 'FP (Over-predicted)', 'FN (Missed)'],
@@ -20,26 +20,31 @@ function updateMaskLut(maskVol, mode, reg, layers, opacity) {
     if (typeof maskVol.setColormapLabel === 'function') {
       maskVol.setColormapLabel(agreementLut);
     }
+    maskVol.opacity = opacity;
   } else {
     // BraTS 2021 labels:
     // 0: Background (100% transparent)
     // 1: Necrotic Core (NCR) -> part of WT, TC
     // 2: Edema (ED) -> part of WT
     // 4: Enhancing Tumour (ET) -> part of WT, TC, ET
-    const showWT = layers.WT;
-    const showTC = layers.TC;
-    const showET = layers.ET;
+    const showWT = layers?.WT ?? true;
+    const showTC = layers?.TC ?? true;
+    const showET = layers?.ET ?? true;
 
+    // HIGH-VISIBILITY CLINICAL COLOR PALETTE
+    // 1: Necrotic Core (NCR) / Tumour Core -> Crisp Vivid Sky Blue / Cyan (#06B6D4)
+    // 2: Peritumoral Edema (ED) / Whole Tumour -> High-Visibility Vivid Emerald Green (#22C55E)
+    // 4: Enhancing Tumour (ET) -> High-Visibility Electric Gold / Yellow (#FACC15)
     const bratsLut = {
-      R: [0, 239, 245, 0, 6],
-      G: [0, 68, 158, 0, 182],
-      B: [0, 68, 11, 0, 212],
+      R: [0,   6,  34, 0, 250],
+      G: [0, 182, 197, 0, 204],
+      B: [0, 212,  94, 0,  21],
       A: [
-        0,                                           // 0: BG transparent
-        (showWT && showTC) ? alphaVal : 0,           // 1: NCR
-        showWT ? alphaVal : 0,                       // 2: ED
-        0,                                           // 3: Unused
-        (showWT && showTC && showET) ? alphaVal : 0, // 4: ET
+        0,                                 // 0: BG transparent
+        showTC ? alphaVal : 0,             // 1: NCR / TC component (Cyan)
+        showWT ? alphaVal : 0,             // 2: ED / WT component (Emerald Green)
+        0,                                 // 3: Unused
+        showET ? alphaVal : 0,             // 4: ET (Vivid Electric Gold/Yellow)
       ],
       I: [0, 1, 2, 3, 4],
       labels: [
@@ -53,6 +58,7 @@ function updateMaskLut(maskVol, mode, reg, layers, opacity) {
     if (typeof maskVol.setColormapLabel === 'function') {
       maskVol.setColormapLabel(bratsLut);
     }
+    maskVol.opacity = opacity;
   }
 }
 
@@ -71,6 +77,8 @@ export default function NiiVueViewer({
   agreementRegion: propAgreementRegion,
   onSetOverlayMode: propOnSetOverlayMode,
   onSetAgreementRegion: propOnSetAgreementRegion,
+  caseResults,
+  activeCase,
 }) {
   const canvasRef = useRef(null);
   const nvRef = useRef(null);
@@ -253,9 +261,14 @@ export default function NiiVueViewer({
         }
 
         nv.addVolume(volume);
+        if (volume.robust_min !== undefined && volume.robust_max !== undefined) {
+          volume.cal_min = volume.robust_min;
+          volume.cal_max = Math.max(volume.robust_max * 1.05, volume.robust_min + 1.0);
+        }
         if (existingOverlay) {
           nv.addVolume(existingOverlay);
           updateMaskLut(existingOverlay, overlayMode, agreementRegion, layerVisibility, overlayOpacity);
+          nv.setOpacity(1, overlayOpacity);
         }
 
         if (volume.dims && volume.dims.length >= 4) {
@@ -288,9 +301,11 @@ export default function NiiVueViewer({
     const isAgreement = overlayMode === 'agreement' && hasExpertMask && caseId;
     const targetUrl = isAgreement
       ? getAgreementMaskUrl(caseId, agreementRegion)
-      : maskUrl;
+      : (maskUrl || (caseId ? getMaskDownloadUrl(caseId) : null));
 
-    if (!targetUrl || (caseResults && caseResults.status !== 'completed' && !isAgreement)) {
+    const hasCompletedResults = caseResults?.status === 'completed' || caseResults?.regions || activeCase?.volumes || activeCase?.files?.expert_mask?.present || activeCase?.has_mask;
+
+    if (!targetUrl || (!hasCompletedResults && !isAgreement)) {
       // Clear any leftover overlay volume when switching cases or resetting
       while (nv.volumes && nv.volumes.length > 1) {
         nv.removeVolumeByIndex(1);
@@ -364,10 +379,10 @@ export default function NiiVueViewer({
           }
         }
 
-        // Step 5: Load validated volume into NiiVue with explicit filename
+        // Step 5: Load validated volume into NiiVue with uncompressed payload
         const maskVolume = await NVImage.loadFromUrl({
-          url: arrayBuf,
-          name: isAgreement ? `agreement_${agreementRegion}.nii.gz` : 'predicted_seg.nii.gz',
+          url: niftiBuffer,
+          name: isAgreement ? `agreement_${agreementRegion}.nii` : 'predicted_seg.nii',
           opacity: overlayOpacity,
         });
 
@@ -381,11 +396,13 @@ export default function NiiVueViewer({
           nv.removeVolumeByIndex(1);
         }
         nv.addVolume(maskVolume);
+        nv.setOpacity(1, overlayOpacity);
+        nv.updateGLVolume();
 
         setStatusMessage(
           isAgreement
             ? `Expert Agreement Active (${agreementRegion}) • 🟢 TP Consensus | 🔴 FP Over-pred | 🟣 FN Missed`
-            : 'Segmentation overlay active • BraTS 2021 Labels 1 (NCR), 2 (ED), 4 (ET)'
+            : 'Segmentation overlay active • 🟡 ET (Enhancing) | 🔵 TC (Core) | 🟢 WT (Edema)'
         );
       } catch (err) {
         if (!isCancelled) {
@@ -400,7 +417,7 @@ export default function NiiVueViewer({
     return () => {
       isCancelled = true;
     };
-  }, [maskUrl, overlayMode, agreementRegion, caseId, hasExpertMask, isViewerReady, baseLoadedCount]);
+  }, [maskUrl, overlayMode, agreementRegion, caseId, hasExpertMask, isViewerReady, baseLoadedCount, caseResults, activeCase]);
 
   // Synchronize colormap LUT whenever tissue visibility toggles or opacity changes
   useEffect(() => {
@@ -408,6 +425,7 @@ export default function NiiVueViewer({
     if (!nv || !isViewerReady || !nv.volumes || nv.volumes.length < 2) return;
     const maskVol = nv.volumes[1];
     updateMaskLut(maskVol, overlayMode, agreementRegion, layerVisibility, overlayOpacity);
+    nv.setOpacity(1, overlayOpacity);
     nv.updateGLVolume();
   }, [layerVisibility, overlayOpacity, overlayMode, agreementRegion, isViewerReady]);
 
@@ -471,24 +489,24 @@ export default function NiiVueViewer({
     const baseVol = nv.volumes[0];
     const robustMin = baseVol.robust_min || 0;
     const robustMax = baseVol.robust_max || 255;
-    const range = robustMax - robustMin;
+    const range = Math.max(robustMax - robustMin, 1);
 
     switch (preset) {
       case 'Brain':
-        baseVol.cal_min = robustMin + range * 0.1;
-        baseVol.cal_max = robustMin + range * 0.7;
+        baseVol.cal_min = robustMin;
+        baseVol.cal_max = robustMax * 1.05;
         break;
       case 'Subdural':
-        baseVol.cal_min = robustMin + range * 0.2;
-        baseVol.cal_max = robustMin + range * 0.9;
+        baseVol.cal_min = robustMin + range * 0.05;
+        baseVol.cal_max = robustMax * 0.95;
         break;
       case 'Bone':
-        baseVol.cal_min = robustMin - range * 0.2;
-        baseVol.cal_max = robustMax * 1.5;
+        baseVol.cal_min = robustMin;
+        baseVol.cal_max = robustMax * 1.35;
         break;
       case 'Stroke':
-        baseVol.cal_min = robustMin + range * 0.15;
-        baseVol.cal_max = robustMin + range * 0.5;
+        baseVol.cal_min = robustMin;
+        baseVol.cal_max = robustMax * 0.85;
         break;
       default:
         baseVol.cal_min = robustMin;
@@ -645,7 +663,7 @@ export default function NiiVueViewer({
                 className="roi-chip-btn"
                 style={{
                   backgroundColor: 'var(--tissue-wt)',
-                  color: '#0F172A',
+                  color: '#FFFFFF',
                   borderColor: 'var(--tissue-wt-border)',
                   opacity: layerVisibility.WT ? 1 : 0.5
                 }}
@@ -788,8 +806,8 @@ export default function NiiVueViewer({
 
           {/* Live Coordinate Pill Badge */}
           <div className="coordinate-pill-badge">
-            {crosshairPos?.vox && crosshairPos?.mm
-              ? `Voxel: [${crosshairPos.vox.join(', ')}] | World: [${crosshairPos.mm.map((m) => `${m}mm`).join(', ')}]`
+            {crosshairPos?.vox
+              ? `Voxel: [${crosshairPos.vox.join(', ')}] | World: [${(crosshairPos.mm || []).map((m) => (m !== null && !isNaN(m) ? `${m}mm` : '0.0mm')).join(', ')}]`
               : 'Voxel: [--, --, --] | World: [--, --, --]'}
           </div>
         </div>

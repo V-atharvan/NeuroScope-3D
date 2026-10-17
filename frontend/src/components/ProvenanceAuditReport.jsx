@@ -183,18 +183,19 @@ export default function ProvenanceAuditReport({
           {/* Research Disclaimer Box */}
           <div
             style={{
-              backgroundColor: 'var(--surface-container-low)',
-              border: '1px solid var(--border-structural)',
+              backgroundColor: '#F2F7A0',
+              border: '1px solid #E4EB78',
+              borderLeft: '4px solid var(--primary-accent)',
               padding: '10px 14px',
               borderRadius: 'var(--radius-sm)',
               marginTop: '6px'
             }}
           >
-            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-surface-dark)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
-              RESEARCH AND TEACHING PROTOTYPE ONLY
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#0F172A', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+              RESEARCH USE ONLY — LEVEL 3 CLASSIFICATION
             </div>
-            <p style={{ fontSize: '11px', color: 'var(--on-surface-variant)', marginTop: '4px', marginBottom: 0, lineHeight: 1.4 }}>
-              This software does not provide medical diagnoses, treatment planning, or clinical decisions. Not FDA cleared. Full regulatory provenance and audit notices are compiled in the certified PDF report.
+            <p style={{ fontSize: '11px', color: '#0F172A', marginTop: '4px', marginBottom: 0, lineHeight: 1.4 }}>
+              Audit record generated strictly for clinical research and algorithmic validation under trial protocol BraTS-AI-2025. This document does not constitute a clinical diagnostic report, prescription, or therapeutic intervention guideline. Not FDA cleared.
             </p>
           </div>
         </div>

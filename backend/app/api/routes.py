@@ -61,6 +61,25 @@ import numpy as np
 router = APIRouter(prefix="/api", tags=["NeuroScope 3D API"])
 
 
+def ensure_valid_gzipped_file(src_path: str, dest_path: str) -> None:
+    """Ensures dest_path exists and is a valid gzip file containing the NIfTI payload."""
+    import gzip
+    import shutil
+    if not os.path.exists(src_path):
+        return
+    with open(src_path, "rb") as f_in:
+        first_bytes = f_in.read(2)
+        f_in.seek(0)
+        is_gz = (len(first_bytes) == 2 and first_bytes[0] == 0x1F and first_bytes[1] == 0x8B)
+        if is_gz:
+            if os.path.abspath(src_path) != os.path.abspath(dest_path):
+                shutil.copy2(src_path, dest_path)
+        else:
+            raw_bytes = f_in.read()
+            with gzip.open(dest_path, "wb") as f_out:
+                f_out.write(raw_bytes)
+
+
 def get_git_commit() -> str:
     """Safely retrieves current Git commit hash or fallback."""
     try:
@@ -750,7 +769,7 @@ def trigger_segmentation(case_id: str):
         elif state.get("expert_mask_path") and os.path.exists(state["expert_mask_path"]):
             # Graceful demonstration fallback for cloud tiers without PyTorch/GPU:
             # Copy bundled ground-truth / reference segmentation to output mask
-            shutil.copyfile(state["expert_mask_path"], out_mask_path)
+            ensure_valid_gzipped_file(state["expert_mask_path"], out_mask_path)
             logger.info(
                 f"[NeuroScope 3D] PyTorch not detected in environment. Using bundled reference mask for case {case_id}."
             )
@@ -1119,8 +1138,7 @@ def download_mask(case_id: str):
     mask_path = os.path.join(case_dir, "predicted_seg.nii.gz")
     if not os.path.exists(mask_path):
         if state.get("expert_mask_path") and os.path.exists(state["expert_mask_path"]):
-            import shutil
-            shutil.copy2(state["expert_mask_path"], mask_path)
+            ensure_valid_gzipped_file(state["expert_mask_path"], mask_path)
             state["status"] = "completed"
             save_case_metadata(case_id, state)
         elif state.get("status") != "completed" and state.get("file_paths"):
@@ -1138,6 +1156,9 @@ def download_mask(case_id: str):
                 status_code=400,
                 detail=f"Case status is '{state.get('status')}'. Mask is only available for successfully completed cases."
             )
+    else:
+        # Guarantee that pre-existing mask_path is a valid gzip file
+        ensure_valid_gzipped_file(mask_path, mask_path)
 
     if not os.path.exists(mask_path):
         raise HTTPException(status_code=404, detail="Predicted mask not found on disk. Run segmentation first.")

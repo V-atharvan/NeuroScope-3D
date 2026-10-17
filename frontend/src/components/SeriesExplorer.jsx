@@ -101,7 +101,7 @@ export default function SeriesExplorer({
                 justifyContent: 'space-between',
                 padding: '6px 8px',
                 backgroundColor: 'var(--tissue-wt)',
-                color: '#0F172A',
+                color: '#FFFFFF',
                 border: '1px solid var(--tissue-wt-border)',
                 borderRadius: 'var(--radius-sm)',
                 fontFamily: 'var(--font-mono)',

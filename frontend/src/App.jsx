@@ -1,19 +1,58 @@
 import React, { useState, useEffect } from 'react';
+import NavRail from './components/NavRail';
 import Header from './components/Header';
 import SeriesExplorer from './components/SeriesExplorer';
 import WorkspaceContextStrip from './components/WorkspaceContextStrip';
-import BottomNav from './components/BottomNav';
 import Dashboard from './pages/Dashboard';
+import DashboardHome from './pages/DashboardHome';
+import VolumetricAnalyticsView from './pages/VolumetricAnalyticsView';
+import LongitudinalView from './pages/LongitudinalView';
+import CaseRegistryView from './pages/CaseRegistryView';
+import UploadAnalysisView from './pages/UploadAnalysisView';
 import ProvenanceAuditReport from './components/ProvenanceAuditReport';
 import CaseValidationDiagnostics from './components/CaseValidationDiagnostics';
 import CohortBenchmarkView from './components/CohortBenchmarkView';
 import UncertaintyAndLongitudinalView from './components/UncertaintyAndLongitudinalView';
-import { getHealth, getMaskDownloadUrl, getSequenceDownloadUrl } from './services/api';
+import {
+  getHealth,
+  getMaskDownloadUrl,
+  getSequenceDownloadUrl,
+  loadSampleStudy,
+  triggerSegmentation,
+  getCaseResults
+} from './services/api';
 
 export default function App() {
+  const getInitialTab = () => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const h = window.location.hash.replace('#', '').toLowerCase();
+      const valid = ['dashboard', 'workstation', 'upload', 'analytics', 'longitudinal', 'trust', 'cohort', 'cases', 'audit', 'diagnostics'];
+      if (valid.includes(h)) return h;
+    }
+    return 'workstation';
+  };
+
   const [backendHealth, setBackendHealth] = useState(null);
-  const [activeTab, setActiveTab] = useState('workstation'); // 'workstation' | 'audit' | 'diagnostics' | 'trust' | 'cohort'
-  const [workstationSubTab, setWorkstationSubTab] = useState('viewer'); // 'viewer' | 'controls' | 'series'
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+  const [isNavCollapsed, setIsNavCollapsed] = useState(false);
+  const [workstationSubTab, setWorkstationSubTab] = useState('viewer');
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    if (typeof window !== 'undefined') {
+      window.location.hash = tab;
+    }
+  };
+
+  useEffect(() => {
+    const handleHash = () => {
+      const h = window.location.hash.replace('#', '').toLowerCase();
+      const valid = ['dashboard', 'workstation', 'upload', 'analytics', 'longitudinal', 'trust', 'cohort', 'cases', 'audit', 'diagnostics'];
+      if (valid.includes(h)) setActiveTabState(h);
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const [activeCase, setActiveCase] = useState(null);
   const [caseResults, setCaseResults] = useState(null);
@@ -22,6 +61,7 @@ export default function App() {
   const [maskUrl, setMaskUrl] = useState(null);
   const [activeSequenceKey, setActiveSequenceKey] = useState('t1gd');
   const [validationError, setValidationError] = useState(null);
+  const [isGlobalLoading, setIsGlobalLoading] = useState(false);
 
   // Check backend health on mount
   useEffect(() => {
@@ -44,10 +84,11 @@ export default function App() {
     }
 
     // If upload response already includes precomputed or expert volumes, populate them safely
-    if (uploadData?.volumes && uploadData?.has_mask) {
+    const hasExpertOrMask = uploadData?.has_mask || uploadData?.files?.expert_mask?.present || false;
+    if (uploadData?.volumes && (hasExpertOrMask || uploadData?.case_id)) {
       setCaseResults({
         case_id: uploadData.case_id,
-        status: 'completed',
+        status: hasExpertOrMask ? 'completed' : (uploadData.status || 'uploaded'),
         regions: uploadData.volumes,
         spatial_metadata: uploadData.spatial_summary || uploadData.spatial_metadata,
       });
@@ -59,7 +100,7 @@ export default function App() {
         regions: uploadData.volumes,
         spatial_metadata: uploadData.spatial_summary || uploadData.spatial_metadata,
       });
-      setMaskUrl(null);
+      setMaskUrl(getMaskDownloadUrl(uploadData.case_id));
     } else {
       setCaseResults(null);
       setMaskUrl(null);
@@ -80,15 +121,15 @@ export default function App() {
 
   const handleValidationError = (err) => {
     setValidationError(err);
-    // Automatically switch to Diagnostics view to show the user the pre-inference check
     setActiveTab('diagnostics');
   };
 
   const handleSelectSequence = (seqKey) => {
     setActiveSequenceKey(seqKey);
-    if (activeCase?.case_id) {
+    const caseIdToUse = activeCase?.case_id || caseResults?.case_id;
+    if (caseIdToUse) {
       setBaseScanFile(null);
-      setBaseScanUrl(getSequenceDownloadUrl(activeCase.case_id, seqKey));
+      setBaseScanUrl(getSequenceDownloadUrl(caseIdToUse, seqKey));
     }
   };
 
@@ -102,117 +143,220 @@ export default function App() {
     setActiveTab('workstation');
   };
 
+  const handleLoadSampleDirect = async () => {
+    setIsGlobalLoading(true);
+    try {
+      const resp = await loadSampleStudy();
+      handleCaseUploaded(resp);
+      await triggerSegmentation(resp.case_id);
+      const results = await getCaseResults(resp.case_id);
+      handleSegmentationCompleted(results);
+      setActiveTab('workstation');
+    } catch (err) {
+      console.error('Failed to load sample study:', err);
+      throw err;
+    } finally {
+      setIsGlobalLoading(false);
+    }
+  };
+
+  const handleSelectPersistedCase = (persistedCase) => {
+    if (!persistedCase) return;
+    setActiveCase(persistedCase);
+    if (persistedCase.case_id) {
+      setBaseScanFile(null);
+      setBaseScanUrl(getSequenceDownloadUrl(persistedCase.case_id, 't1gd'));
+      setActiveSequenceKey('t1gd');
+      if (persistedCase.status === 'completed' || persistedCase.has_mask) {
+        setMaskUrl(getMaskDownloadUrl(persistedCase.case_id));
+        setCaseResults({
+          case_id: persistedCase.case_id,
+          status: 'completed',
+          regions: persistedCase.regions || persistedCase.volumes,
+          spatial_metadata: persistedCase.spatial_metadata || persistedCase.spatial_summary,
+        });
+      }
+    }
+  };
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 1. Fixed Clinical Top Header */}
-      <Header
-        backendHealth={backendHealth}
+    <div className={`app-shell ${isNavCollapsed ? 'nav-collapsed' : 'nav-expanded'}`}>
+      {/* 1. Global Left Navigation Rail */}
+      <NavRail
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onResetStudy={handleResetStudy}
+        isCollapsed={isNavCollapsed}
+        onToggleCollapse={() => setIsNavCollapsed((prev) => !prev)}
+        activeCase={activeCase}
+        caseResults={caseResults}
+        backendHealth={backendHealth}
         hasValidationErrors={!!validationError}
       />
 
-      <div className="main-wrapper">
-        {/* Conditional View Rendering */}
-        {activeTab === 'workstation' && (
-          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-            {/* Top Workspace Context Strip */}
-            <WorkspaceContextStrip
-              caseId={caseResults?.case_id || activeCase?.case_id}
-              spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
+      {/* 2. Main Application Area: Header + Dynamic Canvas */}
+      <div className="app-shell-body">
+        {/* Compact Clinical Top Header */}
+        <Header
+          backendHealth={backendHealth}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onResetStudy={handleResetStudy}
+          hasValidationErrors={!!validationError}
+        />
+
+        {/* Dynamic Main Content Canvas */}
+        <div className="shell-main-canvas">
+          {/* View 1: Bento-Grid Dashboard */}
+          {activeTab === 'dashboard' && (
+            <DashboardHome
+              activeCase={activeCase}
+              caseResults={caseResults}
               backendHealth={backendHealth}
+              onNavigateTab={setActiveTab}
+              onLoadSample={handleLoadSampleDirect}
+              onCaseSelected={handleSelectPersistedCase}
+              isProcessing={isGlobalLoading}
             />
+          )}
 
-            {/* Layout: Sidebar + Central Workstation with mobile responsive classes */}
-            <div className={`app-layout-container workstation-layout mobile-subtab-${workstationSubTab}`}>
-              <div className={`series-sidebar-wrapper ${workstationSubTab === 'series' ? 'mobile-active' : 'mobile-hidden'}`}>
-                <SeriesExplorer
-                  activeSequenceKey={activeSequenceKey}
-                  onSelectSequence={(seq) => {
-                    handleSelectSequence(seq);
-                    // On mobile, after selecting a sequence, automatically return to viewer for instant visual feedback
-                    if (window.innerWidth < 1024) {
-                      setWorkstationSubTab('viewer');
-                    }
-                  }}
-                  volumes={caseResults?.regions || activeCase?.volumes || activeCase?.regions}
-                  caseData={activeCase}
-                  runtimeSeconds={caseResults?.runtime_seconds}
-                />
-              </div>
+          {/* View 2: Viewer-First MRI Workstation */}
+          {activeTab === 'workstation' && (
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+              <WorkspaceContextStrip
+                caseId={caseResults?.case_id || activeCase?.case_id}
+                spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
+                backendHealth={backendHealth}
+              />
 
-              <div className={`workspace-content ${workstationSubTab === 'series' ? 'mobile-hidden' : 'mobile-active'}`}>
-                <Dashboard
-                  activeCase={activeCase}
-                  caseResults={caseResults}
-                  baseScanFile={baseScanFile}
-                  baseScanUrl={baseScanUrl}
-                  maskUrl={maskUrl}
-                  activeSequenceKey={activeSequenceKey}
-                  onSelectSequence={handleSelectSequence}
-                  onCaseUploaded={handleCaseUploaded}
-                  onSegmentationCompleted={handleSegmentationCompleted}
-                  onBaseScanSelected={handleBaseScanSelected}
-                  onValidationError={handleValidationError}
-                  workstationSubTab={workstationSubTab}
-                  onWorkstationSubTabChange={setWorkstationSubTab}
-                />
+              <div className={`app-layout-container workstation-layout mobile-subtab-${workstationSubTab}`}>
+                <div className={`series-sidebar-wrapper ${workstationSubTab === 'series' ? 'mobile-active' : 'mobile-hidden'}`}>
+                  <SeriesExplorer
+                    activeSequenceKey={activeSequenceKey}
+                    onSelectSequence={(seq) => {
+                      handleSelectSequence(seq);
+                      if (window.innerWidth < 1024) {
+                        setWorkstationSubTab('viewer');
+                      }
+                    }}
+                    volumes={caseResults?.regions || activeCase?.volumes || activeCase?.regions}
+                    caseData={activeCase}
+                    runtimeSeconds={caseResults?.runtime_seconds}
+                  />
+                </div>
+
+                <div className={`workspace-content ${workstationSubTab === 'series' ? 'mobile-hidden' : 'mobile-active'}`}>
+                  <Dashboard
+                    activeCase={activeCase}
+                    caseResults={caseResults}
+                    baseScanFile={baseScanFile}
+                    baseScanUrl={baseScanUrl}
+                    maskUrl={maskUrl}
+                    activeSequenceKey={activeSequenceKey}
+                    onSelectSequence={handleSelectSequence}
+                    onCaseUploaded={handleCaseUploaded}
+                    onSegmentationCompleted={handleSegmentationCompleted}
+                    onBaseScanSelected={handleBaseScanSelected}
+                    onValidationError={handleValidationError}
+                    workstationSubTab={workstationSubTab}
+                    onWorkstationSubTabChange={setWorkstationSubTab}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === 'audit' && (
-          <div className="app-layout-container" style={{ justifyContent: 'center' }}>
-            <ProvenanceAuditReport
-              caseId={caseResults?.case_id || activeCase?.case_id}
-              caseData={activeCase}
+          {/* View 3: Step-Based Upload & Pipeline */}
+          {activeTab === 'upload' && (
+            <UploadAnalysisView
+              onCaseUploaded={handleCaseUploaded}
+              onSegmentationCompleted={handleSegmentationCompleted}
+              onBaseScanSelected={handleBaseScanSelected}
+              onValidationError={handleValidationError}
+              activeCase={activeCase}
               caseResults={caseResults}
-              onClose={() => setActiveTab('workstation')}
+              onOpenWorkstation={() => setActiveTab('workstation')}
+              onOpenAnalytics={() => setActiveTab('analytics')}
             />
-          </div>
-        )}
+          )}
 
-        {activeTab === 'trust' && (
-          <div className="app-layout-container" style={{ justifyContent: 'center' }}>
-            <UncertaintyAndLongitudinalView
+          {/* View 4: Dedicated Volumetric Analytics */}
+          {activeTab === 'analytics' && (
+            <VolumetricAnalyticsView
               caseId={caseResults?.case_id || activeCase?.case_id}
               caseResults={caseResults}
-              onClose={() => setActiveTab('workstation')}
+              activeCase={activeCase}
+              onNavigateToCentroid={(vox) => {
+                setActiveTab('workstation');
+              }}
+              onOpenWorkstation={() => setActiveTab('workstation')}
             />
-          </div>
-        )}
+          )}
 
-        {activeTab === 'cohort' && (
-          <div className="app-layout-container" style={{ justifyContent: 'center' }}>
-            <CohortBenchmarkView
-              onClose={() => setActiveTab('workstation')}
-            />
-          </div>
-        )}
-
-        {activeTab === 'diagnostics' && (
-          <div className="app-layout-container" style={{ justifyContent: 'center' }}>
-            <CaseValidationDiagnostics
-              caseId={activeCase?.case_id}
-              caseData={activeCase}
-              errorInfo={validationError}
+          {/* View 5: Longitudinal Comparison */}
+          {activeTab === 'longitudinal' && (
+            <LongitudinalView
+              caseId={caseResults?.case_id || activeCase?.case_id}
+              caseResults={caseResults}
               onBackToWorkstation={() => setActiveTab('workstation')}
-              onUploadCorrected={() => setActiveTab('workstation')}
             />
-          </div>
-        )}
+          )}
+
+          {/* View 6: AI Trust & Uncertainty */}
+          {activeTab === 'trust' && (
+            <div className="app-layout-container" style={{ justifyContent: 'center' }}>
+              <UncertaintyAndLongitudinalView
+                caseId={caseResults?.case_id || activeCase?.case_id}
+                caseResults={caseResults}
+                onClose={() => setActiveTab('workstation')}
+              />
+            </div>
+          )}
+
+          {/* View 7: Held-Out Cohort Benchmarks */}
+          {activeTab === 'cohort' && (
+            <div className="app-layout-container" style={{ justifyContent: 'center' }}>
+              <CohortBenchmarkView
+                onClose={() => setActiveTab('workstation')}
+              />
+            </div>
+          )}
+
+          {/* View 8: Case Registry & Model Card */}
+          {activeTab === 'cases' && (
+            <CaseRegistryView
+              activeCaseId={caseResults?.case_id || activeCase?.case_id}
+              onSelectCase={handleSelectPersistedCase}
+              onNavigateTab={setActiveTab}
+            />
+          )}
+
+          {/* View 9: Provenance & Audit Report */}
+          {activeTab === 'audit' && (
+            <div className="app-layout-container" style={{ justifyContent: 'center' }}>
+              <ProvenanceAuditReport
+                caseId={caseResults?.case_id || activeCase?.case_id}
+                caseData={activeCase}
+                caseResults={caseResults}
+                onClose={() => setActiveTab('workstation')}
+              />
+            </div>
+          )}
+
+          {/* View 10: Case Validation Diagnostics */}
+          {activeTab === 'diagnostics' && (
+            <div className="app-layout-container" style={{ justifyContent: 'center' }}>
+              <CaseValidationDiagnostics
+                caseId={activeCase?.case_id}
+                caseData={activeCase}
+                errorInfo={validationError}
+                onBackToWorkstation={() => setActiveTab('workstation')}
+                onUploadCorrected={() => setActiveTab('workstation')}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Persistent Mobile & Tablet Bottom Navigation Bar (< 1024px) */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        workstationSubTab={workstationSubTab}
-        onWorkstationSubTabChange={setWorkstationSubTab}
-        hasValidationErrors={!!validationError}
-      />
     </div>
   );
 }

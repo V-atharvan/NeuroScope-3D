@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Layers,
+  UploadCloud,
+  ChevronRight,
+  ChevronLeft,
+  Eye,
+  Sliders,
+  BarChart3,
+  RefreshCw,
+  FolderOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  Sparkles
+} from 'lucide-react';
 import UploadPanel from '../components/UploadPanel';
 import NiiVueViewer from '../components/NiiVueViewer';
 import VolumetricCards from '../components/VolumetricCards';
 import BoundaryWatchPanel from '../components/BoundaryWatchPanel';
 import EvaluationPanel from '../components/EvaluationPanel';
 import DownloadsPanel from '../components/DownloadsPanel';
-import { loadSampleStudy, triggerSegmentation, getCaseResults, calculateCaseVolumes } from '../services/api';
+import { loadSampleStudy, triggerSegmentation, getCaseResults, calculateCaseVolumes, getMaskDownloadUrl } from '../services/api';
 
 export default function Dashboard({
   activeCase,
@@ -26,6 +40,9 @@ export default function Dashboard({
   const [overlayMode, setOverlayMode] = useState('prediction'); // 'prediction' | 'agreement'
   const [agreementRegion, setAgreementRegion] = useState('WT'); // 'WT' | 'TC' | 'ET'
   const [isSegmenting, setIsSegmenting] = useState(false);
+  const [sidePanelTab, setSidePanelTab] = useState('quant'); // 'quant' | 'upload'
+  const [isSidePanelCollapsed, setIsSidePanelCollapsed] = useState(false);
+
   const [layerVisibility, setLayerVisibility] = useState({
     WT: true,
     TC: true,
@@ -50,24 +67,26 @@ export default function Dashboard({
     }
   };
 
+  const effectiveVolumes = caseResults?.regions || activeCase?.volumes || activeCase?.regions;
+  const effectiveCaseId = caseResults?.case_id || activeCase?.case_id;
+
   // Sync default centroid whenever new segmentation results arrive
   useEffect(() => {
     if (caseResults?.spatial_metadata?.suggested_crosshair_voxel) {
       setSelectedCentroid(caseResults.spatial_metadata.suggested_crosshair_voxel);
+    } else if (effectiveVolumes?.WT?.centroid_voxel) {
+      setSelectedCentroid(effectiveVolumes.WT.centroid_voxel);
     } else {
       setSelectedCentroid(null);
     }
-  }, [caseResults?.spatial_metadata?.suggested_crosshair_voxel]);
+  }, [caseResults?.spatial_metadata?.suggested_crosshair_voxel, effectiveVolumes?.WT?.centroid_voxel]);
 
-  const seqLabels = {
-    t1: 'T1 Native',
-    t1gd: 'T1CE Contrast',
-    t2: 'T2-Weighted',
-    flair: 'T2 FLAIR',
-  };
-
-  const activeSequenceLabel = seqLabels[activeSequenceKey] || 'T1CE';
-  const effectiveCaseId = caseResults?.case_id || activeCase?.case_id;
+  const seqList = [
+    { key: 't1', label: 'T1 Native', code: 'T1' },
+    { key: 't1gd', label: 'T1CE Contrast', code: 'T1Gd' },
+    { key: 't2', label: 'T2-Weighted', code: 'T2' },
+    { key: 'flair', label: 'T2 FLAIR', code: 'FLAIR' },
+  ];
 
   const handleCalculateVolumes = async () => {
     const caseIdToUse = effectiveCaseId;
@@ -77,12 +96,10 @@ export default function Dashboard({
     setIsSegmenting(true);
     try {
       if (caseResults?.status === 'completed' || activeCase?.has_mask) {
-        // Mask already generated - quickly recalculate physical volumes without full inference re-run
         await calculateCaseVolumes(caseIdToUse);
         const results = await getCaseResults(caseIdToUse);
         onSegmentationCompleted(results);
       } else {
-        // Run neural inference pipeline on the uploaded case
         await triggerSegmentation(caseIdToUse);
         const results = await getCaseResults(caseIdToUse);
         onSegmentationCompleted(results);
@@ -103,9 +120,6 @@ export default function Dashboard({
       await triggerSegmentation(resp.case_id);
       const results = await getCaseResults(resp.case_id);
       onSegmentationCompleted(results);
-      if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-        onWorkstationSubTabChange('viewer');
-      }
     } catch (err) {
       console.error('Failed to load sample study:', err);
       throw err;
@@ -114,136 +128,163 @@ export default function Dashboard({
     }
   };
 
-  const effectiveVolumes = caseResults?.regions || activeCase?.volumes || activeCase?.regions;
-
   return (
-    <div className={`workstation-two-column mobile-view-${workstationSubTab}`}>
-      {/* Mobile Subtab Segmented Switcher (< 1200px) */}
-      <div className="mobile-workstation-pill-bar desktop-hidden">
-        <button
-          type="button"
-          className={`mobile-subtab-btn ${workstationSubTab === 'viewer' ? 'active' : ''}`}
-          onClick={() => onWorkstationSubTabChange && onWorkstationSubTabChange('viewer')}
-        >
-          <span>🖼️ 2D/3D Viewport</span>
-        </button>
-        <button
-          type="button"
-          className={`mobile-subtab-btn ${workstationSubTab === 'controls' ? 'active' : ''}`}
-          onClick={() => onWorkstationSubTabChange && onWorkstationSubTabChange('controls')}
-        >
-          <span>⚡ Ingest & Quantification</span>
-        </button>
-      </div>
+    <div className="viewer-first-workstation-layout">
+      {/* 1. CENTRAL / PRIMARY AREA: Viewer-First Canvas */}
+      <main className="workstation-primary-canvas">
+        {/* Sequence Switcher Pill Bar (Placed near the viewer as requested) */}
+        <div className="viewer-sequence-strip">
+          <div className="sequence-selector-group">
+            <span className="sequence-strip-label">Sequence:</span>
+            {seqList.map((seq) => {
+              const isActive = activeSequenceKey === seq.key;
+              return (
+                <button
+                  key={seq.key}
+                  type="button"
+                  className={`sequence-pill-btn ${isActive ? 'active' : ''}`}
+                  onClick={() => onSelectSequence && onSelectSequence(seq.key)}
+                  title={`Display ${seq.label} in viewport`}
+                >
+                  <span className="sequence-pill-code">{seq.code}</span>
+                  <span className="sequence-pill-name">{seq.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-      {/* LEFT COLUMN: Study Ingestion, Volumetrics, Benchmarks, Export (380px fixed on desktop) */}
-      <aside className={`left-controls-col ${workstationSubTab === 'controls' ? 'mobile-col-visible' : 'mobile-col-hidden'}`}>
-        <UploadPanel
-          onCaseUploaded={(uploadData) => {
-            onCaseUploaded(uploadData);
-            if (onWorkstationSubTabChange && window.innerWidth < 1200 && uploadData?.has_mask) {
-              onWorkstationSubTabChange('viewer');
-            }
-          }}
-          onSegmentationCompleted={(resultsData) => {
-            onSegmentationCompleted(resultsData);
-            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-              onWorkstationSubTabChange('viewer');
-            }
-          }}
-          onBaseScanSelected={onBaseScanSelected}
-          onValidationError={onValidationError}
-        />
+          <div className="sequence-strip-actions">
+            <button
+              type="button"
+              className="side-panel-toggle-btn"
+              onClick={() => setIsSidePanelCollapsed((prev) => !prev)}
+              title={isSidePanelCollapsed ? 'Open side panel' : 'Collapse side panel for full-width viewer'}
+            >
+              {isSidePanelCollapsed ? (
+                <>
+                  <PanelRightOpen size={14} />
+                  <span>Show Side Panel</span>
+                </>
+              ) : (
+                <>
+                  <PanelRightClose size={14} />
+                  <span>Expand Viewer</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
-        <VolumetricCards
-          volumes={effectiveVolumes}
-          spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
-          onSelectCentroid={(vox) => {
-            setSelectedCentroid([...vox]);
-            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-              onWorkstationSubTabChange('viewer');
-            }
-          }}
-          layerVisibility={layerVisibility}
-          onToggleLayer={handleToggleLayer}
-          onRunSegmentation={async () => {
-            await handleCalculateVolumes();
-            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-              onWorkstationSubTabChange('viewer');
-            }
-          }}
-          onLoadSample={handleLoadSampleDirect}
-          isSegmenting={isSegmenting}
-          caseId={effectiveCaseId}
-        />
-
-        {caseResults && (
-          <BoundaryWatchPanel
-            caseId={caseResults.case_id}
-            boundaryWatchData={caseResults.boundary_watch}
-            onNavigateToCentroid={(coords) => {
-              setSelectedCentroid([...coords]);
-              if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-                onWorkstationSubTabChange('viewer');
-              }
-            }}
-            onNavigateToSlice={(sliceZ) => {
-              const currentX = selectedCentroid?.[0] ?? 32;
-              const currentY = selectedCentroid?.[1] ?? 32;
-              setSelectedCentroid([currentX, currentY, sliceZ]);
-              if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-                onWorkstationSubTabChange('viewer');
-              }
-            }}
-          />
-        )}
-
-        <EvaluationPanel
-          caseId={effectiveCaseId}
-          evaluation={caseResults?.case_evaluation}
-          benchmarkReference={caseResults?.held_out_benchmark_reference}
-          volumes={effectiveVolumes}
-          onExpertMaskUploaded={handleExpertMaskUploaded}
-          onActivateAgreementLens={(reg) => {
-            handleActivateAgreementLens(reg);
-            if (onWorkstationSubTabChange && window.innerWidth < 1200) {
-              onWorkstationSubTabChange('viewer');
-            }
-          }}
-        />
-
-        {caseResults && (
-          <DownloadsPanel
-            caseId={caseResults.case_id}
-            provenance={caseResults.provenance}
+        {/* The 2D / 3D NiiVue Interactive Viewport */}
+        <div className="viewer-canvas-frame">
+          <NiiVueViewer
+            baseScanFile={baseScanFile}
+            baseScanUrl={baseScanUrl}
+            maskUrl={maskUrl || (effectiveCaseId && (caseResults?.status === 'completed' || activeCase?.files?.expert_mask?.present || activeCase?.has_mask || effectiveVolumes) ? getMaskDownloadUrl(effectiveCaseId) : null)}
+            suggestedCrosshair={selectedCentroid}
+            activeSequenceKey={activeSequenceKey}
+            activeSequenceLabel={seqList.find((s) => s.key === activeSequenceKey)?.label || 'T1CE'}
+            onSelectSequence={onSelectSequence}
+            caseId={effectiveCaseId}
+            activeCase={activeCase}
             caseResults={caseResults}
+            hasExpertMask={caseResults?.case_evaluation?.available === true || activeCase?.files?.expert_mask?.present === true}
+            layerVisibility={layerVisibility}
+            onToggleLayer={handleToggleLayer}
+            overlayMode={overlayMode}
+            agreementRegion={agreementRegion}
+            onSetOverlayMode={setOverlayMode}
+            onSetAgreementRegion={setAgreementRegion}
           />
-        )}
-      </aside>
+        </div>
+      </main>
 
-      {/* RIGHT COLUMN: Interactive 2D/3D Multi-Planar Viewer Workspace */}
-      <section className={`right-viewer-col ${workstationSubTab === 'viewer' ? 'mobile-col-visible' : 'mobile-col-hidden'}`}>
-        <NiiVueViewer
-          baseScanFile={baseScanFile}
-          baseScanUrl={baseScanUrl}
-          maskUrl={maskUrl}
-          suggestedCrosshair={selectedCentroid}
-          activeSequenceKey={activeSequenceKey}
-          activeSequenceLabel={activeSequenceLabel}
-          onSelectSequence={onSelectSequence}
-          caseId={effectiveCaseId}
-          activeCase={activeCase}
-          caseResults={caseResults}
-          hasExpertMask={caseResults?.case_evaluation?.available === true || activeCase?.files?.expert_mask?.present === true}
-          layerVisibility={layerVisibility}
-          onToggleLayer={handleToggleLayer}
-          overlayMode={overlayMode}
-          agreementRegion={agreementRegion}
-          onSetOverlayMode={setOverlayMode}
-          onSetAgreementRegion={setAgreementRegion}
-        />
-      </section>
+      {/* 2. DEDICATED SIDE PANEL: Region Visibility, Opacity, Volumes, Boundary Watch, Export */}
+      {!isSidePanelCollapsed && (
+        <aside className="workstation-side-panel">
+          {/* Side Panel Tabs Header */}
+          <div className="side-panel-tabs-header">
+            <button
+              type="button"
+              className={`side-panel-tab-btn ${sidePanelTab === 'quant' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('quant')}
+            >
+              <BarChart3 size={14} />
+              <span>Quantitation &amp; Layers</span>
+            </button>
+            <button
+              type="button"
+              className={`side-panel-tab-btn ${sidePanelTab === 'upload' ? 'active' : ''}`}
+              onClick={() => setSidePanelTab('upload')}
+            >
+              <UploadCloud size={14} />
+              <span>Study Ingestion</span>
+            </button>
+          </div>
+
+          {/* Side Panel Body */}
+          <div className="side-panel-scrollable-body">
+            {sidePanelTab === 'quant' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <VolumetricCards
+                  volumes={effectiveVolumes}
+                  spatialMetadata={caseResults?.spatial_metadata || activeCase?.spatial_summary}
+                  onSelectCentroid={(vox) => {
+                    setSelectedCentroid([...vox]);
+                  }}
+                  layerVisibility={layerVisibility}
+                  onToggleLayer={handleToggleLayer}
+                  onRunSegmentation={handleCalculateVolumes}
+                  onLoadSample={handleLoadSampleDirect}
+                  isSegmenting={isSegmenting}
+                  caseId={effectiveCaseId}
+                />
+
+                {caseResults && (
+                  <BoundaryWatchPanel
+                    caseId={caseResults.case_id}
+                    boundaryWatchData={caseResults.boundary_watch}
+                    onNavigateToCentroid={(coords) => {
+                      setSelectedCentroid([...coords]);
+                    }}
+                    onNavigateToSlice={(sliceZ) => {
+                      const currentX = selectedCentroid?.[0] ?? 32;
+                      const currentY = selectedCentroid?.[1] ?? 32;
+                      setSelectedCentroid([currentX, currentY, sliceZ]);
+                    }}
+                  />
+                )}
+
+                <EvaluationPanel
+                  caseId={effectiveCaseId}
+                  evaluation={caseResults?.case_evaluation}
+                  benchmarkReference={caseResults?.held_out_benchmark_reference}
+                  volumes={effectiveVolumes}
+                  onExpertMaskUploaded={handleExpertMaskUploaded}
+                  onActivateAgreementLens={(reg) => {
+                    handleActivateAgreementLens(reg);
+                  }}
+                />
+
+                {caseResults && (
+                  <DownloadsPanel
+                    caseId={caseResults.case_id}
+                    provenance={caseResults.provenance}
+                    caseResults={caseResults}
+                  />
+                )}
+              </div>
+            ) : (
+              <UploadPanel
+                onCaseUploaded={onCaseUploaded}
+                onSegmentationCompleted={onSegmentationCompleted}
+                onBaseScanSelected={onBaseScanSelected}
+                onValidationError={onValidationError}
+              />
+            )}
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
-
