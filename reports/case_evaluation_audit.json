@@ -1,0 +1,179 @@
+{
+  "status": "verified_concordant",
+  "voxel_volume_mm3": 1.0,
+  "metrics": {
+    "WT": {
+      "predicted_voxels": 94963,
+      "reference_voxels": 99302,
+      "predicted_volume_ml": 94.963,
+      "reference_volume_ml": 99.302,
+      "signed_diff_ml": -4.339,
+      "absolute_diff_ml": 4.339,
+      "relative_diff_percent": -4.37,
+      "dice": 0.9513,
+      "sensitivity": 0.9305,
+      "precision": 0.973,
+      "specificity": 0.9997,
+      "hd95_mm": 2.0,
+      "tp_voxels": 92403,
+      "fp_voxels": 2560,
+      "fn_voxels": 6899,
+      "tn_voxels": 8826138,
+      "centroid_voxel": [
+        98,
+        164,
+        98
+      ],
+      "centroid_voxel_fractional": [
+        98.272,
+        164.413,
+        98.144
+      ],
+      "centroid_world_mm": [
+        -98.27,
+        74.59,
+        98.14
+      ],
+      "bounding_box_voxel": {
+        "min": [
+          73,
+          128,
+          67
+        ],
+        "max": [
+          122,
+          203,
+          135
+        ]
+      },
+      "bounding_box_world_mm": {
+        "min": [
+          -122.0,
+          36.0,
+          67.0
+        ],
+        "max": [
+          -73.0,
+          111.0,
+          135.0
+        ]
+      }
+    },
+    "TC": {
+      "predicted_voxels": 52175,
+      "reference_voxels": 52855,
+      "predicted_volume_ml": 52.175,
+      "reference_volume_ml": 52.855,
+      "signed_diff_ml": -0.68,
+      "absolute_diff_ml": 0.68,
+      "relative_diff_percent": -1.29,
+      "dice": 0.9584,
+      "sensitivity": 0.9522,
+      "precision": 0.9646,
+      "specificity": 0.9998,
+      "hd95_mm": 2.45,
+      "tp_voxels": 50328,
+      "fp_voxels": 1847,
+      "fn_voxels": 2527,
+      "tn_voxels": 8873298,
+      "centroid_voxel": [
+        97,
+        176,
+        93
+      ],
+      "centroid_voxel_fractional": [
+        97.49,
+        175.596,
+        92.818
+      ],
+      "centroid_world_mm": [
+        -97.49,
+        63.4,
+        92.82
+      ],
+      "bounding_box_voxel": {
+        "min": [
+          78,
+          142,
+          67
+        ],
+        "max": [
+          118,
+          203,
+          124
+        ]
+      },
+      "bounding_box_world_mm": {
+        "min": [
+          -118.0,
+          36.0,
+          67.0
+        ],
+        "max": [
+          -78.0,
+          97.0,
+          124.0
+        ]
+      }
+    },
+    "ET": {
+      "predicted_voxels": 28475,
+      "reference_voxels": 32047,
+      "predicted_volume_ml": 28.475,
+      "reference_volume_ml": 32.047,
+      "signed_diff_ml": -3.572,
+      "absolute_diff_ml": 3.572,
+      "relative_diff_percent": -11.15,
+      "dice": 0.8722,
+      "sensitivity": 0.8236,
+      "precision": 0.9269,
+      "specificity": 0.9998,
+      "hd95_mm": 1.41,
+      "tp_voxels": 26394,
+      "fp_voxels": 2081,
+      "fn_voxels": 5653,
+      "tn_voxels": 8893872,
+      "centroid_voxel": [
+        98,
+        176,
+        92
+      ],
+      "centroid_voxel_fractional": [
+        97.715,
+        175.505,
+        91.898
+      ],
+      "centroid_world_mm": [
+        -97.72,
+        63.49,
+        91.9
+      ],
+      "bounding_box_voxel": {
+        "min": [
+          78,
+          142,
+          67
+        ],
+        "max": [
+          118,
+          203,
+          124
+        ]
+      },
+      "bounding_box_world_mm": {
+        "min": [
+          -118.0,
+          36.0,
+          67.0
+        ],
+        "max": [
+          -78.0,
+          97.0,
+          124.0
+        ]
+      }
+    }
+  },
+  "case_id": "case_79270e25-ff86-4d75-a8bf-e2bbbeba5d7d",
+  "provenance_manifest": "data/case_manifest_BraTS2021_00495.json"
+}

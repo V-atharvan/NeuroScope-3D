@@ -77,6 +77,11 @@ def get_spatial_unit_scale_factor(units: Any) -> float:
     """
     if units is None:
         return 1.0
+    if hasattr(units, "get_xyzt_units"):
+        try:
+            units = units.get_xyzt_units()[0]
+        except Exception:
+            units = "mm"
     if isinstance(units, (tuple, list)):
         units = units[0] if len(units) > 0 else "mm"
     if isinstance(units, str):

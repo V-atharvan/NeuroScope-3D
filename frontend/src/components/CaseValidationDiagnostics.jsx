@@ -15,6 +15,14 @@ export default function CaseValidationDiagnostics({
   const errMsg = errorInfo?.message || 'Study input sequences failed pre-inference geometry or format verification.';
   const errorDetails = errorInfo?.details || {};
 
+  const isNetworkError =
+    errMsg.toLowerCase().includes('cannot reach') ||
+    errMsg.toLowerCase().includes('failed to fetch') ||
+    errMsg.toLowerCase().includes('connection_refused') ||
+    errMsg.toLowerCase().includes('could not reach backend') ||
+    errCode === 'NETWORK_ERROR' ||
+    errCode === 'SERVER_OFFLINE';
+
   const files = caseData?.files || {};
   const spatial = caseData?.spatial_summary;
   const shape = spatial?.shape || [240, 240, 155];
@@ -26,7 +34,7 @@ export default function CaseValidationDiagnostics({
       <div
         className="safe-failure-banner"
         style={{
-          backgroundColor: hasError ? 'var(--error-red)' : (isCaseActive ? 'var(--success)' : 'var(--primary)'),
+          backgroundColor: hasError ? (isNetworkError ? '#D97706' : 'var(--error-red)') : (isCaseActive ? 'var(--success)' : 'var(--primary)'),
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -37,7 +45,7 @@ export default function CaseValidationDiagnostics({
           )}
           <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
             {hasError
-              ? `Safe-Failure Lockout: Neural Inference Halted (${errCode})`
+              ? (isNetworkError ? `Safe-Failure Lockout: Backend Service Offline (${errCode})` : `Safe-Failure Lockout: Neural Inference Halted (${errCode})`)
               : (isCaseActive
                   ? 'Pre-Inference Validation System: All Input Volumes Verified & Compliant'
                   : 'Pre-Inference Validation System: All Systems Operational')}
@@ -48,7 +56,7 @@ export default function CaseValidationDiagnostics({
             {caseLabel}
           </span>
           <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '2px' }}>
-            STATUS: {hasError ? 'ERROR_HALT' : (isCaseActive ? 'VERIFIED' : 'STANDBY')}
+            STATUS: {hasError ? (isNetworkError ? 'OFFLINE' : 'ERROR_HALT') : (isCaseActive ? 'VERIFIED' : 'STANDBY')}
           </span>
         </div>
       </div>
@@ -81,7 +89,7 @@ export default function CaseValidationDiagnostics({
             <div
               style={{
                 backgroundColor: 'var(--surface-card)',
-                borderLeft: '4px solid var(--error-red)',
+                borderLeft: `4px solid ${isNetworkError ? '#D97706' : 'var(--error-red)'}`,
                 borderTop: '1px solid var(--border-structural)',
                 borderRight: '1px solid var(--border-structural)',
                 borderBottom: '1px solid var(--border-structural)',
@@ -92,9 +100,11 @@ export default function CaseValidationDiagnostics({
                 gap: '6px'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--error-dark)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isNetworkError ? '#B45309' : 'var(--error-dark)' }}>
                 <AlertTriangle size={16} />
-                <span style={{ fontSize: '13px', fontWeight: 700 }}>Geometric Compatibility Failure</span>
+                <span style={{ fontSize: '13px', fontWeight: 700 }}>
+                  {isNetworkError ? 'Backend Connectivity Offline' : 'Geometric Compatibility Failure'}
+                </span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--on-surface)', lineHeight: 1.4 }}>
                 {errMsg}
@@ -190,14 +200,16 @@ export default function CaseValidationDiagnostics({
               <div>
                 <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--on-surface-dark)' }}>
                   {hasError
-                    ? 'Case Validation Intercepted'
+                    ? (isNetworkError ? 'Backend Connection Offline' : 'Case Validation Intercepted')
                     : isCaseActive
                     ? 'Pre-Inference Verification: Study Geometry Verified'
                     : 'Pre-Inference Verification Pipeline'}
                 </h1>
                 <p style={{ fontSize: '13px', color: 'var(--on-surface-variant)', marginTop: '4px', maxWidth: '720px' }}>
                   {hasError
-                    ? 'The pipeline halted before running model inference to protect volumetric integrity and prevent erroneous tensor computations.'
+                    ? (isNetworkError
+                        ? 'The platform cannot communicate with the FastAPI backend server. Verify that run_platform.bat is running locally or allow Render cold-start.'
+                        : 'The pipeline halted before running model inference to protect volumetric integrity and prevent erroneous tensor computations.')
                     : isCaseActive
                     ? `Input sequences for ${caseLabel} successfully passed spatial dimension, non-zero variance, affine alignment, and finite value checks.`
                     : 'All input volumes are checked against strict medical-imaging criteria before being stacked into the 4-channel tensor.'}
@@ -288,30 +300,41 @@ export default function CaseValidationDiagnostics({
               </div>
 
               {/* Check 4 (Shape & Affine Matching) */}
-              <div className={`check-item ${hasError ? 'failed' : 'passed'}`}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  {hasError ? (
-                    <XCircle size={16} style={{ color: 'var(--error-red)', marginTop: '2px', flexShrink: 0 }} />
-                  ) : (
-                    <CheckCircle2 size={16} style={{ color: 'var(--success)', marginTop: '2px', flexShrink: 0 }} />
-                  )}
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: hasError ? 'var(--error-dark)' : 'var(--on-surface-dark)' }}>
-                      Compatible Grid Affines & Spatial Dimensions
+              {(() => {
+                const isShapeFailed = hasError && !isNetworkError && (errCode.includes('SHAPE') || errCode.includes('AFFINE') || errCode.includes('DIMENSION') || (!errCode.includes('NIFTI') && !errCode.includes('VARIANCE') && !errCode.includes('VALUE')));
+                const checkStatus = isShapeFailed ? 'failed' : (isNetworkError ? 'skipped' : 'passed');
+
+                return (
+                  <div className={`check-item ${checkStatus}`}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      {isShapeFailed ? (
+                        <XCircle size={16} style={{ color: 'var(--error-red)', marginTop: '2px', flexShrink: 0 }} />
+                      ) : isNetworkError && !isCaseActive ? (
+                        <PauseCircle size={16} style={{ color: 'var(--outline)', marginTop: '2px', flexShrink: 0 }} />
+                      ) : (
+                        <CheckCircle2 size={16} style={{ color: 'var(--success)', marginTop: '2px', flexShrink: 0 }} />
+                      )}
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: isShapeFailed ? 'var(--error-dark)' : 'var(--on-surface-dark)' }}>
+                          Compatible Grid Affines & Spatial Dimensions
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)' }}>
+                          {isShapeFailed
+                            ? errMsg
+                            : isCaseActive
+                            ? `All 4 sequences verified to share identical 3D shape [${shape.join(' × ')}] and spacing [${spacing.join(' × ')} mm].`
+                            : isNetworkError
+                            ? 'Awaiting active backend connection to verify multi-sequence spatial affines.'
+                            : 'Verifies all 4 sequences share identical 3D shapes and coordinate transforms.'}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--on-surface-variant)' }}>
-                      {hasError
-                        ? errMsg
-                        : isCaseActive
-                        ? `All 4 sequences verified to share identical 3D shape [${shape.join(' × ')}] and spacing [${spacing.join(' × ')} mm].`
-                        : 'Verifies all 4 sequences share identical 3D shapes and coordinate transforms.'}
-                    </div>
+                    <span className={isShapeFailed ? 'status-pill-failed' : (isNetworkError && !isCaseActive ? 'status-pill-skipped' : 'status-pill-passed')}>
+                      {isShapeFailed ? 'INTERCEPTED' : (isNetworkError && !isCaseActive ? 'PENDING' : 'VERIFIED')}
+                    </span>
                   </div>
-                </div>
-                <span className={hasError ? 'status-pill-failed' : 'status-pill-passed'}>
-                  {hasError ? 'INTERCEPTED' : 'VERIFIED'}
-                </span>
-              </div>
+                );
+              })()}
 
               {/* Check 5 */}
               <div className="check-item skipped">

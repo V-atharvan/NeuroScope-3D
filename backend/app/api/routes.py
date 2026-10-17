@@ -137,7 +137,7 @@ def health_check() -> HealthResponse:
     )
 
 
-@router.get("/cases")
+@router.api_route("/cases", methods=["GET", "HEAD"])
 def list_cases():
     """Lists active research cases available in ephemeral session storage."""
     cleanup_expired_cases()
@@ -534,7 +534,7 @@ def load_sample_case():
         )
 
 
-@router.get("/cases/{case_id}/sequences/{seq_key}")
+@router.api_route("/cases/{case_id}/sequences/{seq_key}", methods=["GET", "HEAD"])
 def download_sequence(case_id: str, seq_key: str):
     """Streams an individual uploaded sequence NIfTI file."""
     enforce_secure_case_id(case_id)
@@ -699,7 +699,8 @@ def trigger_segmentation(case_id: str):
                 "Please run NeuroScope 3D locally via run_platform.bat or install PyTorch on the host."
             )
 
-        elapsed = time.time() - start_time
+        infer_elapsed = time.time() - start_time
+        eval_start = time.time()
 
         # Calculate volumes on original grid using geometry-aware affine determinant
         pred_nii = nib.load(out_mask_path)
@@ -737,6 +738,7 @@ def trigger_segmentation(case_id: str):
                 "reason": "Expert mask not supplied"
             }
 
+        eval_elapsed = time.time() - eval_start
 
         # Build provenance
         input_sha256 = {}
@@ -746,6 +748,12 @@ def trigger_segmentation(case_id: str):
         if state.get("files", {}).get("expert_mask", {}).get("present") and "sha256" in state["files"]["expert_mask"]:
             input_sha256["expert_mask"] = state["files"]["expert_mask"]["sha256"]
 
+        timing_breakdown = {
+            "inference_seconds": round(infer_elapsed, 2),
+            "evaluation_seconds": round(eval_elapsed, 2),
+            "device": device_name,
+        }
+
         provenance = {
             "model_name": "MONAI brats_mri_segmentation (SegResNet)",
             "model_license": "Apache 2.0",
@@ -753,8 +761,10 @@ def trigger_segmentation(case_id: str):
             "git_commit": get_git_commit(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "input_sha256": input_sha256,
+            "timing_breakdown": timing_breakdown,
         }
 
+        report_start = time.time()
         # Generate PDF report
         generate_pdf_report(
             case_id=case_id,
@@ -763,13 +773,17 @@ def trigger_segmentation(case_id: str):
             spatial_metadata=state["spatial_metadata"],
             provenance=provenance,
             case_evaluation=case_eval,
-            runtime_seconds=elapsed,
+            runtime_seconds=infer_elapsed,
             mri_path=state.get("file_paths", {}).get("flair") or state.get("file_paths", {}).get("t1gd") or state.get("file_paths", {}).get("t1"),
             mask_path=out_mask_path,
             files_metadata=state.get("files"),
             validation_results=state.get("validation"),
             expert_mask_path=state.get("expert_mask_path"),
         )
+        report_elapsed = time.time() - report_start
+        total_elapsed = time.time() - start_time
+        timing_breakdown["report_seconds"] = round(report_elapsed, 2)
+        timing_breakdown["total_pipeline_seconds"] = round(total_elapsed, 2)
 
         # Compute Boundary Watch quality assurance flags
         try:
@@ -785,7 +799,8 @@ def trigger_segmentation(case_id: str):
 
         # Update case state
         state["status"] = "completed"
-        state["runtime_seconds"] = round(elapsed, 2)
+        state["runtime_seconds"] = round(total_elapsed, 2)
+        state["timing_breakdown"] = timing_breakdown
         state["volumes"] = volumes
         state["case_evaluation"] = case_eval
         state["provenance"] = provenance
@@ -796,7 +811,7 @@ def trigger_segmentation(case_id: str):
         return SegmentationTriggerResponse(
             case_id=case_id,
             status="completed",
-            message=f"Segmentation completed in {elapsed:.2f} seconds."
+            message=f"Segmentation completed in {total_elapsed:.2f} seconds."
         )
 
     except (PreprocessingError, PostprocessingError, FileNotFoundError, RuntimeError) as e:
@@ -815,7 +830,7 @@ def trigger_segmentation(case_id: str):
         )
 
 
-@router.get("/cases/{case_id}/status", response_model=CaseStatusResponse)
+@router.api_route("/cases/{case_id}/status", methods=["GET", "HEAD"], response_model=CaseStatusResponse)
 def get_case_status(case_id: str):
     """Processing and execution status for a case."""
     enforce_secure_case_id(case_id)
@@ -843,7 +858,7 @@ def get_case_status(case_id: str):
     )
 
 
-@router.get("/cases/{case_id}/results", response_model=CaseResultsResponse)
+@router.api_route("/cases/{case_id}/results", methods=["GET", "HEAD"], response_model=CaseResultsResponse)
 def get_case_results(case_id: str):
     """Quantitative volumetric results, provenance, and output links."""
     enforce_secure_case_id(case_id)
@@ -884,8 +899,10 @@ def get_case_results(case_id: str):
             formula=r_info.get("formula"),
             measurement_status=r_info.get("measurement_status"),
             bounding_box_voxel=bbox,
+            bounding_box_world_mm=r_info.get("bounding_box_world_mm"),
             centroid_voxel=c_vox,
-            centroid_world_mm=c_world,
+            centroid_voxel_fractional=r_info.get("centroid_voxel_fractional"),
+            centroid_world_mm=c_world or r_info.get("centroid_world_mm"),
         )
 
     # Evaluation
@@ -962,7 +979,7 @@ def get_case_results(case_id: str):
     )
 
 
-@router.get("/cases/{case_id}/summary")
+@router.api_route("/cases/{case_id}/summary", methods=["GET", "HEAD"])
 def download_summary(case_id: str):
     """
     Exports a clean, machine-readable JSON research summary containing case ID,
@@ -1022,7 +1039,7 @@ def download_summary(case_id: str):
     )
 
 
-@router.get("/cases/{case_id}/mask")
+@router.api_route("/cases/{case_id}/mask", methods=["GET", "HEAD"])
 def download_mask(case_id: str):
     """Streams the predicted BraTS 2021 segmentation mask as binary NIfTI (.nii.gz)."""
     enforce_secure_case_id(case_id)
@@ -1053,7 +1070,7 @@ def download_mask(case_id: str):
     )
 
 
-@router.get("/cases/{case_id}/agreement-mask")
+@router.api_route("/cases/{case_id}/agreement-mask", methods=["GET", "HEAD"])
 def download_agreement_mask(case_id: str, region: str = "WT"):
     """
     Streams the 4-class expert agreement mask (0=TN, 1=TP, 2=FP, 3=FN) as binary NIfTI (.nii.gz)
@@ -1346,7 +1363,7 @@ def get_case_evaluation(case_id: str):
     }
 
 
-@router.get("/cases/{case_id}/report")
+@router.api_route("/cases/{case_id}/report", methods=["GET", "HEAD"])
 def download_report(case_id: str):
     """Streams the formal clinical provenance PDF report."""
     enforce_secure_case_id(case_id)
@@ -1413,7 +1430,7 @@ def download_report(case_id: str):
     )
 
 
-@router.get("/cases/{case_id}/mesh/{region}")
+@router.api_route("/cases/{case_id}/mesh/{region}", methods=["GET", "HEAD"])
 def get_case_mesh(case_id: str, region: str = "WT", format: str = "glb"):
     """
     Extracts and streams a 3D polygonal surface mesh in continuous world millimetre space.

@@ -205,7 +205,8 @@ def test_6_expert_mask_metrics_included(tmp_path):
         content = f.read()
 
     assert b"0.9412" in content
-    assert b"High Concordance" in content
+    assert b"0.8850" in content
+    assert b"Dice (DSC)" in content or b"Dice" in content
 
 
 def test_7_and_9_expert_mask_unavailability_explicit(tmp_path):

@@ -32,7 +32,7 @@ def main():
     print(f"[*] Starting FastAPI backend on http://127.0.0.1:8000 ...")
 
     backend_proc = subprocess.Popen(
-        [python_cmd, "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+        [python_cmd, "-m", "uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "backend"],
         cwd=repo_root
     )
 
@@ -54,12 +54,25 @@ def main():
     print("Press Ctrl+C to terminate both servers.")
     print("=" * 70 + "\n")
 
+    def safe_terminate(proc):
+        if proc is None or proc.poll() is not None:
+            return
+        try:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                proc.terminate()
+                proc.wait(timeout=3)
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
     def handle_sigint(signum, frame):
         print("\n[*] Shutting down NeuroScope 3D servers...")
-        backend_proc.terminate()
-        frontend_proc.terminate()
-        backend_proc.wait()
-        frontend_proc.wait()
+        safe_terminate(backend_proc)
+        safe_terminate(frontend_proc)
         print("[*] Successfully terminated.")
         sys.exit(0)
 
@@ -69,10 +82,12 @@ def main():
         while True:
             time.sleep(1)
             if backend_proc.poll() is not None:
-                print("[!] Backend exited unexpectedly.")
+                print(f"[!] Backend exited with code {backend_proc.returncode}.")
+                safe_terminate(frontend_proc)
                 break
             if frontend_proc.poll() is not None:
-                print("[!] Frontend exited unexpectedly.")
+                print(f"[!] Frontend exited with code {frontend_proc.returncode}.")
+                safe_terminate(backend_proc)
                 break
     except KeyboardInterrupt:
         handle_sigint(None, None)
