@@ -3,7 +3,10 @@
  * Interacts directly with the FastAPI backend defined in docs/API_CONTRACT.md.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'https://neuroscope-3d-backend.onrender.com'
+    : '');
 
 /**
  * Backend operational status and model readiness

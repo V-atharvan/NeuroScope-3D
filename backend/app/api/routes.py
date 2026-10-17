@@ -105,7 +105,7 @@ def enforce_secure_case_id(case_id: str) -> str:
         )
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.api_route("/health", methods=["GET", "HEAD"], response_model=HealthResponse)
 def health_check() -> HealthResponse:
     """Backend operational status and model readiness."""
     cleanup_expired_cases()  # Purge any cases > 24 hours
