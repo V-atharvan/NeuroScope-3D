@@ -143,7 +143,8 @@ export default function VolumetricCards({
                   type="button"
                   className="btn-primary"
                   onClick={handleTriggerCalculation}
-                  disabled={isBusy}
+                  disabled={isBusy || !caseId}
+                  title={!caseId ? 'Upload and validate MRI sequences in Step 1 first' : 'Calculate tumor volumes for uploaded case'}
                   style={{
                     width: '100%',
                     padding: '8px 12px',
@@ -153,11 +154,11 @@ export default function VolumetricCards({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    cursor: isBusy ? 'not-allowed' : 'pointer'
+                    cursor: (isBusy || !caseId) ? 'not-allowed' : 'pointer'
                   }}
                 >
                   <Play size={14} fill="currentColor" />
-                  <span>Calculate Tumor Volumes (mL)</span>
+                  <span>{caseId ? 'Calculate Tumor Volumes (mL)' : 'Upload Study in Step 1 First'}</span>
                 </button>
 
                 {onLoadSample && (

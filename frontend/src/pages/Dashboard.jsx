@@ -5,7 +5,7 @@ import VolumetricCards from '../components/VolumetricCards';
 import BoundaryWatchPanel from '../components/BoundaryWatchPanel';
 import EvaluationPanel from '../components/EvaluationPanel';
 import DownloadsPanel from '../components/DownloadsPanel';
-import { loadSampleStudy, triggerSegmentation, getCaseResults } from '../services/api';
+import { loadSampleStudy, triggerSegmentation, getCaseResults, calculateCaseVolumes } from '../services/api';
 
 export default function Dashboard({
   activeCase,
@@ -68,18 +68,23 @@ export default function Dashboard({
   const effectiveCaseId = caseResults?.case_id || activeCase?.case_id;
 
   const handleCalculateVolumes = async () => {
-    let caseIdToUse = effectiveCaseId;
+    const caseIdToUse = effectiveCaseId;
+    if (!caseIdToUse) {
+      throw new Error('Please upload and validate all 4 MRI sequences in Step 1 first.');
+    }
     setIsSegmenting(true);
     try {
-      if (!caseIdToUse) {
-        // Load sample study and trigger inference
-        const resp = await loadSampleStudy();
-        onCaseUploaded(resp);
-        caseIdToUse = resp.case_id;
+      if (caseResults?.status === 'completed' || activeCase?.has_mask) {
+        // Mask already generated - quickly recalculate physical volumes without full inference re-run
+        await calculateCaseVolumes(caseIdToUse);
+        const results = await getCaseResults(caseIdToUse);
+        onSegmentationCompleted(results);
+      } else {
+        // Run neural inference pipeline on the uploaded case
+        await triggerSegmentation(caseIdToUse);
+        const results = await getCaseResults(caseIdToUse);
+        onSegmentationCompleted(results);
       }
-      await triggerSegmentation(caseIdToUse);
-      const results = await getCaseResults(caseIdToUse);
-      onSegmentationCompleted(results);
     } catch (err) {
       console.error('Volume calculation failed:', err);
       throw err;
