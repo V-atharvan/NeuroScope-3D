@@ -916,11 +916,16 @@ def get_case_results(case_id: str):
         eval_resp = CaseEvaluation(available=False, reason="Expert mask not supplied")
 
 
-    # Suggested crosshair (center of Whole Tumour or empty if no tumor)
-    wt_bbox = regions["WT"].bounding_box_voxel
-    if regions["WT"].voxel_count > 0 and wt_bbox:
+    # Suggested crosshair (center of mass of Whole Tumour or empty if no tumor)
+    wt_reg = regions.get("WT")
+    if wt_reg and wt_reg.voxel_count > 0 and wt_reg.centroid_voxel:
+        crosshair_vox = wt_reg.centroid_voxel
+        crosshair_world = wt_reg.centroid_world_mm or [
+            round(float(w), 2) for w in (affine @ np.array([float(crosshair_vox[0]), float(crosshair_vox[1]), float(crosshair_vox[2]), 1.0], dtype=np.float64))[:3]
+        ]
+    elif wt_reg and wt_reg.voxel_count > 0 and wt_reg.bounding_box_voxel:
         crosshair_vox = [
-            int((wt_bbox.min[i] + wt_bbox.max[i]) // 2) for i in range(3)
+            int((wt_reg.bounding_box_voxel.min[i] + wt_reg.bounding_box_voxel.max[i]) // 2) for i in range(3)
         ]
         homog_cross = np.array([crosshair_vox[0], crosshair_vox[1], crosshair_vox[2], 1.0], dtype=np.float64)
         crosshair_world = [round(float(w), 2) for w in (affine @ homog_cross)[:3]]

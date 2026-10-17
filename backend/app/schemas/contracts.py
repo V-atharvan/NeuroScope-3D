@@ -92,6 +92,8 @@ class RegionVolume(BaseModel):
     measurement_status: Optional[str] = None
     bounding_box_voxel: Optional[BoundingBox] = None
     centroid_voxel: Optional[List[int]] = None
+    centroid_voxel_fractional: Optional[List[float]] = None
+    bounding_box_world_mm: Optional[Dict[str, List[float]]] = None
     centroid_world_mm: Optional[List[float]] = None
 
 
