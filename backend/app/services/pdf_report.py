@@ -176,11 +176,21 @@ def generate_slice_visualizations(
         cor_bio.seek(0)
         sag_bio.seek(0)
 
+        world_c = None
+        try:
+            aff = mri_nii.affine
+            if aff is not None:
+                w = aff @ np.array([float(c[0]), float(c[1]), float(c[2]), 1.0], dtype=np.float32)
+                world_c = [round(float(v), 1) for v in w[:3]]
+        except Exception:
+            pass
+
         return {
             "axial": ax_bio,
             "coronal": cor_bio,
             "sagittal": sag_bio,
             "centroid": c,
+            "world_centroid": world_c,
         }
     except Exception:
         return None
@@ -387,12 +397,22 @@ def generate_pdf_report(
         sag_img = RLImage(slice_visuals["sagittal"], width=2.1 * inch, height=2.1 * inch)
         c = slice_visuals["centroid"]
 
+        wc = slice_visuals.get("world_centroid")
+        if wc:
+            ax_text = f"<b>Axial View</b> (Z = {c[2]}, {wc[2]:+.1f} mm)"
+            cor_text = f"<b>Coronal View</b> (Y = {c[1]}, {wc[1]:+.1f} mm)"
+            sag_text = f"<b>Sagittal View</b> (X = {c[0]}, {wc[0]:+.1f} mm)"
+        else:
+            ax_text = f"<b>Axial View</b> (Z = {c[2]})"
+            cor_text = f"<b>Coronal View</b> (Y = {c[1]})"
+            sag_text = f"<b>Sagittal View</b> (X = {c[0]})"
+
         img_table_data = [
             [ax_img, cor_img, sag_img],
             [
-                Paragraph(f"<b>Axial View</b> (Z = {c[2]})", body_style),
-                Paragraph(f"<b>Coronal View</b> (Y = {c[1]})", body_style),
-                Paragraph(f"<b>Sagittal View</b> (X = {c[0]})", body_style),
+                Paragraph(ax_text, body_style),
+                Paragraph(cor_text, body_style),
+                Paragraph(sag_text, body_style),
             ]
         ]
         img_table = Table(img_table_data, colWidths=[2.5 * inch, 2.5 * inch, 2.5 * inch])
@@ -609,6 +629,15 @@ def generate_pdf_report(
         ]
     ]
 
+    ref_aff = None
+    if spatial_metadata:
+        raw_aff = spatial_metadata.get("reference_affine") or spatial_metadata.get("affine")
+        if raw_aff is not None:
+            try:
+                ref_aff = np.asarray(raw_aff, dtype=np.float32)
+            except Exception:
+                pass
+
     for reg_key in ["WT", "TC", "ET"]:
         r_info = volumes.get(reg_key, {})
         bbox = r_info.get("bounding_box_voxel")
@@ -616,10 +645,37 @@ def generate_pdf_report(
             min_v = bbox["min"]
             max_v = bbox["max"]
             v_str = f"[{min_v[0]},{min_v[1]},{min_v[2]}] → [{max_v[0]},{max_v[1]},{max_v[2]}]"
-            mm_min = [min_v[i] * spacing[i] for i in range(3)]
-            mm_max = [max_v[i] * spacing[i] for i in range(3)]
-            mm_str = f"[{mm_min[0]:.1f},{mm_min[1]:.1f},{mm_min[2]:.1f}] → [{mm_max[0]:.1f},{mm_max[1]:.1f},{mm_max[2]:.1f}]"
-            cent_v = f"[{(min_v[0]+max_v[0])//2}, {(min_v[1]+max_v[1])//2}, {(min_v[2]+max_v[2])//2}]"
+
+            bbox_world = r_info.get("bounding_box_world_mm")
+            if not bbox_world and ref_aff is not None:
+                try:
+                    corners = []
+                    for x in [min_v[0], max_v[0]]:
+                        for y in [min_v[1], max_v[1]]:
+                            for z in [min_v[2], max_v[2]]:
+                                w = ref_aff @ np.array([float(x), float(y), float(z), 1.0], dtype=np.float32)
+                                corners.append(w[:3])
+                    corners = np.array(corners)
+                    w_min = [round(float(v), 1) for v in np.min(corners, axis=0)]
+                    w_max = [round(float(v), 1) for v in np.max(corners, axis=0)]
+                    bbox_world = {"min": w_min, "max": w_max}
+                except Exception:
+                    pass
+
+            if bbox_world:
+                w_min = bbox_world["min"]
+                w_max = bbox_world["max"]
+                mm_str = f"[{w_min[0]:.1f},{w_min[1]:.1f},{w_min[2]:.1f}] → [{w_max[0]:.1f},{w_max[1]:.1f},{w_max[2]:.1f}]"
+            else:
+                mm_min = [min_v[i] * spacing[i] for i in range(3)]
+                mm_max = [max_v[i] * spacing[i] for i in range(3)]
+                mm_str = f"[{mm_min[0]:.1f},{mm_min[1]:.1f},{mm_min[2]:.1f}] → [{mm_max[0]:.1f},{mm_max[1]:.1f},{mm_max[2]:.1f}]"
+
+            c_vox = r_info.get("centroid_voxel")
+            if c_vox is not None and len(c_vox) == 3:
+                cent_v = f"[{c_vox[0]}, {c_vox[1]}, {c_vox[2]}]"
+            else:
+                cent_v = f"[{(min_v[0]+max_v[0])//2}, {(min_v[1]+max_v[1])//2}, {(min_v[2]+max_v[2])//2}]"
         else:
             v_str = "None (0 positive voxels)"
             mm_str = "N/A"
@@ -680,7 +736,7 @@ def generate_pdf_report(
             tpr_val = m.get("sensitivity")
             tpr_str = f"{tpr_val:.4f}" if tpr_val is not None else "N/A"
             hd95_val = m.get("hd95_mm")
-            hd95_str = f"{hd95_val:.1f}" if hd95_val is not None else "N/A"
+            hd95_str = f"{hd95_val:.2f}" if hd95_val is not None else "N/A"
 
             tp_v = m.get("tp_voxels", "--")
             fp_v = m.get("fp_voxels", "--")
@@ -755,7 +811,14 @@ def generate_pdf_report(
             tpr_val = m.get("sensitivity", 0.0)
             hd95_val = m.get("hd95_mm")
             hd95_str = f"{hd95_val:.2f} mm" if hd95_val is not None else "N/A"
-            status_text = "<font color='#065F46'><b>High Concordance</b></font>" if dsc_val >= 0.85 else ("<font color='#D97706'>Moderate Concordance</font>" if dsc_val >= 0.70 else "<font color='#DC2626'>Low Concordance</font>")
+            if m.get("is_empty_agreement") or (dsc_val == 1.0 and "reference_volume_ml" in m and m["reference_volume_ml"] == 0.0 and "predicted_volume_ml" in m and m["predicted_volume_ml"] == 0.0):
+                status_text = "<font color='#065F46'><b>Concordant Absence (No ET Present)</b></font>"
+            elif dsc_val >= 0.85:
+                status_text = "<font color='#065F46'><b>High Concordance</b></font>"
+            elif dsc_val >= 0.70:
+                status_text = "<font color='#D97706'>Moderate Concordance</font>"
+            else:
+                status_text = "<font color='#DC2626'>Low Concordance</font>"
 
             case_acc_data.append([
                 Paragraph(f"<b>{reg}</b>", body_style),
