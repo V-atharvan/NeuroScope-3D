@@ -3,7 +3,21 @@
  * Interacts directly with the FastAPI backend defined in docs/API_CONTRACT.md.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const RENDER_BACKEND_URL = 'https://neuroscope-3d-backend.onrender.com';
+
+export const API_BASE = (() => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === 'string' && envUrl.startsWith('http')) {
+    return envUrl.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return '';
+    }
+  }
+  return RENDER_BACKEND_URL;
+})();
 
 async function safeParseJson(res, defaultError = 'Request failed') {
   const contentType = res.headers?.get('content-type') || '';

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/VITE_API_BASE_URL/api/:path*",
+      "destination": "https://neuroscope-3d-backend.onrender.com/api/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://neuroscope-3d-backend.onrender.com/api/:path*"
     },
