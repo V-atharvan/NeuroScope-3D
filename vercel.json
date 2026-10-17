@@ -3,8 +3,13 @@
   "rootDirectory": "frontend",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://neuroscope-3d-backend.onrender.com/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
+
