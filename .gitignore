@@ -54,12 +54,15 @@ models/*.bin
 models/*.onnx
 *.pth
 *.pt
+models/**/model_base_pretrained.ts
+*_base_pretrained.ts
 
 # Generated case artefacts, temporary outputs, and exported reports
 outputs/
 artefacts/
 artifacts/
 temp_reports/
+scratch/
 *.pdf
 !reports/*.pdf
 

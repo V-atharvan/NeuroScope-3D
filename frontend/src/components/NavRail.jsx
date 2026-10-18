@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
+import IconCrossFade from './IconCrossFade';
 
 export default function NavRail({
   activeTab,
@@ -160,7 +161,12 @@ export default function NavRail({
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          <IconCrossFade
+            isActive={isCollapsed}
+            ActiveIcon={ChevronRight}
+            InactiveIcon={ChevronLeft}
+            size={16}
+          />
           {!isCollapsed && <span style={{ fontSize: '11px', fontWeight: 500 }}>Collapse</span>}
         </button>
       </div>
