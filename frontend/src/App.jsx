@@ -63,6 +63,16 @@ export default function App() {
   const [validationError, setValidationError] = useState(null);
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
 
+  // Ingestion state persistent across workstation session
+  const [ingestionFiles, setIngestionFiles] = useState({
+    t1: null,
+    t1gd: null,
+    t2: null,
+    flair: null,
+    expert_mask: null,
+  });
+  const [uploadResult, setUploadResult] = useState(null);
+
   // Check backend health on mount
   useEffect(() => {
     getHealth()
@@ -74,6 +84,7 @@ export default function App() {
 
   const handleCaseUploaded = (uploadData) => {
     setActiveCase(uploadData);
+    setUploadResult(uploadData);
     setValidationError(null);
 
     // Clear local file so server-synced sequence URL is loaded
@@ -140,6 +151,14 @@ export default function App() {
     setBaseScanUrl(null);
     setMaskUrl(null);
     setValidationError(null);
+    setIngestionFiles({
+      t1: null,
+      t1gd: null,
+      t2: null,
+      flair: null,
+      expert_mask: null,
+    });
+    setUploadResult(null);
     setActiveTab('workstation');
   };
 
@@ -148,6 +167,7 @@ export default function App() {
     try {
       const resp = await loadSampleStudy();
       handleCaseUploaded(resp);
+      setUploadResult(resp);
       await triggerSegmentation(resp.case_id);
       const results = await getCaseResults(resp.case_id);
       handleSegmentationCompleted(results);
@@ -163,6 +183,7 @@ export default function App() {
   const handleSelectPersistedCase = (persistedCase) => {
     if (!persistedCase) return;
     setActiveCase(persistedCase);
+    setUploadResult(persistedCase);
     if (persistedCase.case_id) {
       setBaseScanFile(null);
       setBaseScanUrl(getSequenceDownloadUrl(persistedCase.case_id, 't1gd'));
@@ -259,6 +280,10 @@ export default function App() {
                     onValidationError={handleValidationError}
                     workstationSubTab={workstationSubTab}
                     onWorkstationSubTabChange={setWorkstationSubTab}
+                    ingestionFiles={ingestionFiles}
+                    onIngestionFilesChange={setIngestionFiles}
+                    uploadResult={uploadResult}
+                    onUploadResultChange={setUploadResult}
                   />
                 </div>
               </div>
@@ -276,6 +301,10 @@ export default function App() {
               caseResults={caseResults}
               onOpenWorkstation={() => setActiveTab('workstation')}
               onOpenAnalytics={() => setActiveTab('analytics')}
+              ingestionFiles={ingestionFiles}
+              onIngestionFilesChange={setIngestionFiles}
+              uploadResult={uploadResult}
+              onUploadResultChange={setUploadResult}
             />
           )}
 
