@@ -17,6 +17,7 @@ import {
   Link as LinkIcon,
   Unlink
 } from 'lucide-react';
+import IconCrossFade from './IconCrossFade';
 import { getActiveCases, loadSampleLongitudinalPair, compareLongitudinalStudies, getSequenceDownloadUrl, getMaskDownloadUrl } from '../services/api';
 
 export default function DualCaseCompareViewer({
@@ -451,7 +452,7 @@ export default function DualCaseCompareViewer({
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '4px',
+              gap: '6px',
               padding: '4px 8px',
               fontSize: '11px',
               fontWeight: 600,
@@ -462,7 +463,12 @@ export default function DualCaseCompareViewer({
               cursor: 'pointer'
             }}
           >
-            {syncScroll ? <LinkIcon size={12} /> : <Unlink size={12} />}
+            <IconCrossFade
+              isActive={Boolean(syncScroll)}
+              ActiveIcon={LinkIcon}
+              InactiveIcon={Unlink}
+              size={12}
+            />
             <span>{syncScroll ? 'Linked Viewports' : 'Unlinked Viewports'}</span>
           </button>
 
@@ -810,7 +816,7 @@ export default function DualCaseCompareViewer({
                           <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{base.toFixed(2)} mL</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${basePct}%`, height: '100%', backgroundColor: '#0284C7', borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                          <div className="analytics-bar-fill" style={{ width: `${basePct}%`, height: '100%', backgroundColor: '#0284C7', borderRadius: '4px' }} />
                         </div>
                       </div>
 
@@ -821,7 +827,7 @@ export default function DualCaseCompareViewer({
                           <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{follow.toFixed(2)} mL</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ width: `${followPct}%`, height: '100%', backgroundColor: '#EA580C', borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                          <div className="analytics-bar-fill" style={{ width: `${followPct}%`, height: '100%', backgroundColor: '#EA580C', borderRadius: '4px' }} />
                         </div>
                       </div>
                     </div>

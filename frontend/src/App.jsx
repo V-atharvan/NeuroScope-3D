@@ -82,6 +82,32 @@ export default function App() {
       });
   }, []);
 
+  // Suppress transitions on theme / scheme switch (better-ui)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleChange = () => {
+      const style = document.createElement('style');
+      style.append(
+        document.createTextNode(
+          '*,*::before,*::after{transition:none !important}'
+        )
+      );
+      document.head.append(style);
+
+      // Force synchronous style flush
+      void document.body.offsetHeight;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => style.remove());
+      });
+    };
+
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
+
   const handleCaseUploaded = (uploadData) => {
     setActiveCase(uploadData);
     setUploadResult(uploadData);

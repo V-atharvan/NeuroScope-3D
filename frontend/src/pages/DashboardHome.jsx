@@ -73,20 +73,20 @@ export default function DashboardHome({
       {/* 1. HERO AREA */}
       <section className="bento-hero-card">
         <div className="bento-hero-content">
-          <div className="bento-hero-badge">
+          <div className="bento-hero-badge stagger-item">
             <Sparkles size={14} className="text-primary-blue" />
             <span>CLINICAL AI WORKSPACE • BRAIN MRI QUANTIFICATION</span>
           </div>
-          <h1 className="bento-hero-title">
+          <h1 className="bento-hero-title stagger-item">
             NeuroScope 3D Multi-Parametric Pipeline
           </h1>
-          <p className="bento-hero-description">
+          <p className="bento-hero-description stagger-item">
             Automated deep-learning segmentation of brain tumours into Whole Tumour (WT), Tumour Core (TC),
             and Enhancing Tumour (ET) using MONAI SegResNet. Rigorous ISO 1.0mm³ physical volumetrics,
             Shannon entropy uncertainty profiling, and longitudinal RANO assessment.
           </p>
 
-          <div className="bento-hero-actions">
+          <div className="bento-hero-actions stagger-item">
             <button
               type="button"
               className="btn-primary bento-action-btn"

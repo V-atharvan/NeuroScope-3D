@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Play, Loader2, RefreshCw, FlaskConical, AlertCircle, CheckCircle2 } from 'lucide-react';
+import IconCrossFade from './IconCrossFade';
 
 export default function VolumetricCards({
   volumes,
@@ -213,7 +214,12 @@ export default function VolumetricCards({
                     color: layerVisibility?.WT ? '#1D4ED8' : '#94A3B8',
                   }}
                 >
-                  {layerVisibility?.WT ? <Eye size={12} /> : <EyeOff size={12} />}
+                  <IconCrossFade
+                    isActive={Boolean(layerVisibility?.WT)}
+                    ActiveIcon={Eye}
+                    InactiveIcon={EyeOff}
+                    size={12}
+                  />
                 </button>
               )}
             </div>
@@ -317,7 +323,12 @@ export default function VolumetricCards({
                     color: layerVisibility?.TC ? '#DC2626' : '#94A3B8',
                   }}
                 >
-                  {layerVisibility?.TC ? <Eye size={12} /> : <EyeOff size={12} />}
+                  <IconCrossFade
+                    isActive={Boolean(layerVisibility?.TC)}
+                    ActiveIcon={Eye}
+                    InactiveIcon={EyeOff}
+                    size={12}
+                  />
                 </button>
               )}
             </div>
@@ -421,7 +432,12 @@ export default function VolumetricCards({
                     color: layerVisibility?.ET ? '#CA8A04' : '#94A3B8',
                   }}
                 >
-                  {layerVisibility?.ET ? <Eye size={12} /> : <EyeOff size={12} />}
+                  <IconCrossFade
+                    isActive={Boolean(layerVisibility?.ET)}
+                    ActiveIcon={Eye}
+                    InactiveIcon={EyeOff}
+                    size={12}
+                  />
                 </button>
               )}
             </div>
