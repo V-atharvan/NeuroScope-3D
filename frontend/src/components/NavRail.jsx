@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  LayoutDashboard
 } from 'lucide-react';
 import IconCrossFade from './IconCrossFade';
 
@@ -27,6 +28,14 @@ export default function NavRail({
   const isHealthy = backendHealth && backendHealth.status === 'healthy';
 
   const navItems = [
+    {
+      id: 'dashboard',
+      label: 'Clinical Dashboard',
+      icon: LayoutDashboard,
+      badge: 'HUB',
+      badgeColor: '#2373F4',
+      desc: 'Case Registry & Quick Start'
+    },
     {
       id: 'workstation',
       label: 'MRI Workstation',

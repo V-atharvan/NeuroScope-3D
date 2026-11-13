@@ -3686,3 +3686,221 @@ button svg.lucide,
   }
 }
 
+/* ==============================================================================
+   SECTION 15: HIGH-LUMINANCE CLINICAL WORKSTATION REFINEMENT
+   Design System Expansion: Polished Surfaces, Tabular Figures & Accent Cards
+   ============================================================================== */
+
+/* Modern Volumetric Metric Cards */
+.metric-card-pro {
+  background-color: #ffffff;
+  border: 1px solid var(--border-structural);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.metric-card-pro:hover {
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07);
+}
+
+.metric-card-pro.wt-accent {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, #ffffff 40%);
+}
+
+.metric-card-pro.tc-accent {
+  border-left: 4px solid #06b6d4;
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.05) 0%, #ffffff 40%);
+}
+
+.metric-card-pro.et-accent {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.06) 0%, #ffffff 40%);
+}
+
+.metric-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.metric-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-hero-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.metric-hero-num {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.metric-hero-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.metric-quick-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #475569;
+}
+
+.centroid-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.centroid-tag-btn:hover {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.layer-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.layer-toggle-pill.visible {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.layer-toggle-pill:hover {
+  border-color: #3b82f6;
+}
+
+.advanced-geo-details {
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+.advanced-geo-summary {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.advanced-geo-summary:hover {
+  color: #0f172a;
+}
+
+.advanced-geo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+  padding-top: 6px;
+}
+
+/* Polished Upload & Sequence Slots */
+.upload-card-pro {
+  background-color: #ffffff;
+  border: 1px solid var(--border-structural);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.dropzone-pro {
+  border: 2px dashed #93c5fd;
+  background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+  border-radius: 8px;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.dropzone-pro:hover {
+  border-color: var(--primary);
+  background: #eff6ff;
+  transform: translateY(-1px);
+}
+
+.sequence-slot-pro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #ffffff;
+  border: 1px solid var(--border-structural);
+  border-radius: 6px;
+  gap: 10px;
+  transition: all 0.12s ease;
+}
+
+.sequence-slot-pro:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+
+.sequence-slot-pro.validated {
+  border-left: 3px solid #10b981;
+}
+
+.sequence-slot-pro.pending {
+  border-left: 3px solid #cbd5e1;
+}
+
+

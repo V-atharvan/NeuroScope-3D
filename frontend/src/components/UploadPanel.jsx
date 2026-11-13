@@ -364,7 +364,7 @@ export default function UploadPanel({
 
       {/* Drag & Drop Bulk Upload Zone */}
       <div
-        className="dropzone-container"
+        className="dropzone-container dropzone-pro"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleFileDrop}
         onClick={() => document.getElementById('bulk-folder-input')?.click()}
@@ -463,7 +463,7 @@ export default function UploadPanel({
           else if (isAssigned) slotStatus = 'assigned';
 
           return (
-            <div key={spec.id} className="sequence-slot-card">
+            <div key={spec.id} className={`sequence-slot-card sequence-slot-pro ${slotStatus}`}>
               {/* Left: badge + label + filename */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
                 <span className="seq-code-badge"

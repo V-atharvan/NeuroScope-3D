@@ -189,36 +189,26 @@ export default function VolumetricCards({
         </div>
       )}
 
-      {/* 3 Solid Metric Cards */}
+      {/* 3 High-Visibility Solid Metric Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {/* Whole Tumour (WT) */}
-        <div className="metric-card-solid">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="metric-card-solid metric-card-pro wt-accent">
+          <div className="metric-header-row">
+            <div className="metric-title-group">
               <span className="metric-chip-wt">WT: Whole Tumour</span>
               {hasVolumes && onToggleLayer && (
                 <button
                   type="button"
+                  className={`layer-toggle-pill ${layerVisibility?.WT ? 'visible' : ''}`}
                   onClick={() => onToggleLayer('WT')}
                   title={layerVisibility?.WT ? 'Hide Whole Tumour in viewers' : 'Show Whole Tumour in viewers'}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: layerVisibility?.WT ? '#EFF6FF' : '#F1F5F9',
-                    border: '1px solid',
-                    borderColor: layerVisibility?.WT ? '#93C5FD' : '#CBD5E1',
-                    borderRadius: '3px',
-                    padding: '2px 4px',
-                    cursor: 'pointer',
-                    color: layerVisibility?.WT ? '#1D4ED8' : '#94A3B8',
-                  }}
+                  aria-label="Toggle Whole Tumour visibility"
                 >
                   <IconCrossFade
                     isActive={Boolean(layerVisibility?.WT)}
                     ActiveIcon={Eye}
                     InactiveIcon={EyeOff}
-                    size={12}
+                    size={13}
                   />
                 </button>
               )}
@@ -227,8 +217,8 @@ export default function VolumetricCards({
               {hasVolumes && (
                 <span
                   style={{
-                    padding: '1px 5px',
-                    borderRadius: '2px',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
                     fontSize: '9px',
                     fontWeight: 700,
                     letterSpacing: '0.04em',
@@ -241,25 +231,20 @@ export default function VolumetricCards({
                   {wt?.measurement_status ? wt.measurement_status.replace('_', ' ').toUpperCase() : (wt?.voxel_count > 0 ? 'VALID' : 'EMPTY')}
                 </span>
               )}
-              <span className="metric-val-num">
-                {hasVolumes && wt?.volume_ml !== undefined ? wt.volume_ml.toFixed(1) : '--'}{' '}
-                <span className="metric-val-unit">mL</span>
-              </span>
+              <div className="metric-hero-stat">
+                <span className="metric-hero-num metric-val-num">
+                  {hasVolumes && wt?.volume_ml !== undefined ? wt.volume_ml.toFixed(1) : '--'}
+                </span>
+                <span className="metric-hero-unit metric-val-unit">mL</span>
+              </div>
             </div>
           </div>
-          <div
-            className="font-mono"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '11px',
-              color: 'var(--on-surface-variant)',
-              marginTop: '2px'
-            }}
-          >
+
+          <div className="metric-quick-meta font-mono">
             <span>Voxels: <b>{hasVolumes && wt?.voxel_count !== undefined ? wt.voxel_count.toLocaleString() : '--'}</b> ({hasVolumes ? `${(wt?.voxel_volume_mm3 ?? voxelVolMm3).toFixed(2)} mm³` : '--'})</span>
             <span>BBox: {hasVolumes ? formatBbox(wt?.bounding_box_voxel) : '[--] → [--]'}</span>
           </div>
+
           {hasVolumes && (
             <div
               className="font-mono"
@@ -267,67 +252,47 @@ export default function VolumetricCards({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: 'var(--on-surface-variant)',
-                marginTop: '4px',
-                paddingTop: '3px',
+                paddingTop: '4px',
                 borderTop: '1px dashed #E2E8F0'
               }}
             >
-              <span>Centroid:</span>
+              <span style={{ fontSize: '10px', color: '#64748B' }}>Centroid Crosshair:</span>
               {wt?.centroid_voxel ? (
                 <button
                   type="button"
+                  className="centroid-tag-btn"
                   onClick={() => onSelectCentroid && onSelectCentroid(wt.centroid_voxel)}
                   title={`Jump crosshair to WT centroid [${wt.centroid_voxel.join(', ')}]`}
-                  style={{
-                    border: '1px solid #BFDBFE',
-                    background: '#EFF6FF',
-                    color: '#1D4ED8',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '10px'
-                  }}
                 >
                   [{wt.centroid_voxel.join(', ')}]
                 </button>
               ) : (
-                <span style={{ color: '#94A3B8' }}>None (0 voxels)</span>
+                <span style={{ color: '#94A3B8', fontSize: '10px' }}>None (0 voxels)</span>
               )}
             </div>
           )}
         </div>
 
         {/* Tumour Core (TC) */}
-        <div className="metric-card-solid">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="metric-card-solid metric-card-pro tc-accent">
+          <div className="metric-header-row">
+            <div className="metric-title-group">
               <span className="metric-chip-tc">TC: Tumour Core</span>
               {hasVolumes && onToggleLayer && (
                 <button
                   type="button"
+                  className={`layer-toggle-pill ${layerVisibility?.TC ? 'visible' : ''}`}
                   onClick={() => onToggleLayer('TC')}
                   title={layerVisibility?.TC ? 'Hide Tumour Core in viewers' : 'Show Tumour Core in viewers'}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: layerVisibility?.TC ? '#FEF2F2' : '#F1F5F9',
-                    border: '1px solid',
-                    borderColor: layerVisibility?.TC ? '#FECACA' : '#CBD5E1',
-                    borderRadius: '3px',
-                    padding: '2px 4px',
-                    cursor: 'pointer',
-                    color: layerVisibility?.TC ? '#DC2626' : '#94A3B8',
-                  }}
+                  aria-label="Toggle Tumour Core visibility"
                 >
                   <IconCrossFade
                     isActive={Boolean(layerVisibility?.TC)}
                     ActiveIcon={Eye}
                     InactiveIcon={EyeOff}
-                    size={12}
+                    size={13}
                   />
                 </button>
               )}
@@ -336,8 +301,8 @@ export default function VolumetricCards({
               {hasVolumes && (
                 <span
                   style={{
-                    padding: '1px 5px',
-                    borderRadius: '2px',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
                     fontSize: '9px',
                     fontWeight: 700,
                     letterSpacing: '0.04em',
@@ -350,25 +315,20 @@ export default function VolumetricCards({
                   {tc?.measurement_status ? tc.measurement_status.replace('_', ' ').toUpperCase() : (tc?.voxel_count > 0 ? 'VALID' : 'EMPTY')}
                 </span>
               )}
-              <span className="metric-val-num">
-                {hasVolumes && tc?.volume_ml !== undefined ? tc.volume_ml.toFixed(1) : '--'}{' '}
-                <span className="metric-val-unit">mL</span>
-              </span>
+              <div className="metric-hero-stat">
+                <span className="metric-hero-num metric-val-num">
+                  {hasVolumes && tc?.volume_ml !== undefined ? tc.volume_ml.toFixed(1) : '--'}
+                </span>
+                <span className="metric-hero-unit metric-val-unit">mL</span>
+              </div>
             </div>
           </div>
-          <div
-            className="font-mono"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '11px',
-              color: 'var(--on-surface-variant)',
-              marginTop: '2px'
-            }}
-          >
+
+          <div className="metric-quick-meta font-mono">
             <span>Voxels: <b>{hasVolumes && tc?.voxel_count !== undefined ? tc.voxel_count.toLocaleString() : '--'}</b> ({hasVolumes ? `${(tc?.voxel_volume_mm3 ?? voxelVolMm3).toFixed(2)} mm³` : '--'})</span>
             <span>Ratio WT: <b>{hasVolumes ? `${tcRatio}%` : '--'}</b></span>
           </div>
+
           {hasVolumes && (
             <div
               className="font-mono"
@@ -376,67 +336,47 @@ export default function VolumetricCards({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: 'var(--on-surface-variant)',
-                marginTop: '4px',
-                paddingTop: '3px',
+                paddingTop: '4px',
                 borderTop: '1px dashed #E2E8F0'
               }}
             >
-              <span>Centroid:</span>
+              <span style={{ fontSize: '10px', color: '#64748B' }}>Centroid Crosshair:</span>
               {tc?.centroid_voxel ? (
                 <button
                   type="button"
+                  className="centroid-tag-btn"
                   onClick={() => onSelectCentroid && onSelectCentroid(tc.centroid_voxel)}
                   title={`Jump crosshair to TC centroid [${tc.centroid_voxel.join(', ')}]`}
-                  style={{
-                    border: '1px solid #FECACA',
-                    background: '#FEF2F2',
-                    color: '#DC2626',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '10px'
-                  }}
                 >
                   [{tc.centroid_voxel.join(', ')}]
                 </button>
               ) : (
-                <span style={{ color: '#94A3B8' }}>None (0 voxels)</span>
+                <span style={{ color: '#94A3B8', fontSize: '10px' }}>None (0 voxels)</span>
               )}
             </div>
           )}
         </div>
 
         {/* Enhancing Tumour (ET) */}
-        <div className="metric-card-solid">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="metric-card-solid metric-card-pro et-accent">
+          <div className="metric-header-row">
+            <div className="metric-title-group">
               <span className="metric-chip-et">ET: Enhancing Tumour</span>
               {hasVolumes && onToggleLayer && (
                 <button
                   type="button"
+                  className={`layer-toggle-pill ${layerVisibility?.ET ? 'visible' : ''}`}
                   onClick={() => onToggleLayer('ET')}
                   title={layerVisibility?.ET ? 'Hide Enhancing Tumour in viewers' : 'Show Enhancing Tumour in viewers'}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: layerVisibility?.ET ? '#FEFCE8' : '#F1F5F9',
-                    border: '1px solid',
-                    borderColor: layerVisibility?.ET ? '#FEF08A' : '#CBD5E1',
-                    borderRadius: '3px',
-                    padding: '2px 4px',
-                    cursor: 'pointer',
-                    color: layerVisibility?.ET ? '#CA8A04' : '#94A3B8',
-                  }}
+                  aria-label="Toggle Enhancing Tumour visibility"
                 >
                   <IconCrossFade
                     isActive={Boolean(layerVisibility?.ET)}
                     ActiveIcon={Eye}
                     InactiveIcon={EyeOff}
-                    size={12}
+                    size={13}
                   />
                 </button>
               )}
@@ -445,8 +385,8 @@ export default function VolumetricCards({
               {hasVolumes && (
                 <span
                   style={{
-                    padding: '1px 5px',
-                    borderRadius: '2px',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
                     fontSize: '9px',
                     fontWeight: 700,
                     letterSpacing: '0.04em',
@@ -459,25 +399,20 @@ export default function VolumetricCards({
                   {et?.measurement_status ? et.measurement_status.replace('_', ' ').toUpperCase() : (et?.voxel_count > 0 ? 'VALID' : 'EMPTY')}
                 </span>
               )}
-              <span className="metric-val-num">
-                {hasVolumes && et?.volume_ml !== undefined ? et.volume_ml.toFixed(1) : '--'}{' '}
-                <span className="metric-val-unit">mL</span>
-              </span>
+              <div className="metric-hero-stat">
+                <span className="metric-hero-num metric-val-num">
+                  {hasVolumes && et?.volume_ml !== undefined ? et.volume_ml.toFixed(1) : '--'}
+                </span>
+                <span className="metric-hero-unit metric-val-unit">mL</span>
+              </div>
             </div>
           </div>
-          <div
-            className="font-mono"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '11px',
-              color: 'var(--on-surface-variant)',
-              marginTop: '2px'
-            }}
-          >
+
+          <div className="metric-quick-meta font-mono">
             <span>Voxels: <b>{hasVolumes && et?.voxel_count !== undefined ? et.voxel_count.toLocaleString() : '--'}</b> ({hasVolumes ? `${(et?.voxel_volume_mm3 ?? voxelVolMm3).toFixed(2)} mm³` : '--'})</span>
             <span>Active Margin</span>
           </div>
+
           {hasVolumes && (
             <div
               className="font-mono"
@@ -485,34 +420,24 @@ export default function VolumetricCards({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                fontSize: '10px',
+                fontSize: '11px',
                 color: 'var(--on-surface-variant)',
-                marginTop: '4px',
-                paddingTop: '3px',
+                paddingTop: '4px',
                 borderTop: '1px dashed #E2E8F0'
               }}
             >
-              <span>Centroid:</span>
+              <span style={{ fontSize: '10px', color: '#64748B' }}>Centroid Crosshair:</span>
               {et?.centroid_voxel ? (
                 <button
                   type="button"
+                  className="centroid-tag-btn"
                   onClick={() => onSelectCentroid && onSelectCentroid(et.centroid_voxel)}
                   title={`Jump crosshair to ET centroid [${et.centroid_voxel.join(', ')}]`}
-                  style={{
-                    border: '1px solid #FEF08A',
-                    background: '#FEFCE8',
-                    color: '#CA8A04',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: '10px'
-                  }}
                 >
                   [{et.centroid_voxel.join(', ')}]
                 </button>
               ) : (
-                <span style={{ color: '#94A3B8' }}>None (0 voxels)</span>
+                <span style={{ color: '#94A3B8', fontSize: '10px' }}>None (0 voxels)</span>
               )}
             </div>
           )}

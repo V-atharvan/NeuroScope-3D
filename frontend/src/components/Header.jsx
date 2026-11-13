@@ -58,7 +58,7 @@ export default function Header({
 
             <div className="header-divider desktop-only" style={{ height: '20px', width: '1px', backgroundColor: 'var(--outline-variant)' }} />
 
-            {/* Real Session / User Role */}
+            {/* Diagnostic Session Operator */}
             <div
               className="doctor-profile"
               onClick={() => setShowMobileTelemetry((prev) => !prev)}
@@ -68,10 +68,10 @@ export default function Header({
             >
               <div className="doctor-profile-text desktop-only" style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--on-surface-dark)', lineHeight: 1.2 }}>
-                  Dr. Elena Rostova
+                  Diagnostic Operator
                 </span>
                 <span style={{ fontSize: '10px', color: 'var(--on-surface-variant)', fontFamily: 'var(--font-mono)' }}>
-                  Lead Neuro-Radiologist
+                  ISO 1.0mm³ Calibrated
                 </span>
               </div>
               <div className="doctor-avatar">

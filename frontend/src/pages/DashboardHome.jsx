@@ -174,9 +174,9 @@ export default function DashboardHome({
               <span className="bento-stat-hint">mpMRI 4-Sequence Protocol</span>
             </div>
 
-            <div className="bento-stat-box">
-              <span className="bento-stat-label">Whole Tumour (WT)</span>
-              <span className="bento-stat-value font-mono" style={{ color: '#0284c7' }}>
+            <div className="bento-stat-box" style={{ borderLeft: '3px solid #10b981', background: 'linear-gradient(90deg, rgba(16,185,129,0.04), #ffffff)' }}>
+              <span className="bento-stat-label" style={{ color: '#059669' }}>Whole Tumour (WT)</span>
+              <span className="bento-stat-value font-mono" style={{ color: '#047857' }}>
                 {volumes?.WT?.volume_ml !== undefined ? `${volumes.WT.volume_ml.toFixed(1)} mL` : '--'}
               </span>
               <span className="bento-stat-hint">
@@ -184,17 +184,17 @@ export default function DashboardHome({
               </span>
             </div>
 
-            <div className="bento-stat-box">
-              <span className="bento-stat-label">Tumour Core (TC)</span>
-              <span className="bento-stat-value font-mono" style={{ color: 'var(--primary-accent)' }}>
+            <div className="bento-stat-box" style={{ borderLeft: '3px solid #06b6d4', background: 'linear-gradient(90deg, rgba(6,182,212,0.04), #ffffff)' }}>
+              <span className="bento-stat-label" style={{ color: '#0891b2' }}>Tumour Core (TC)</span>
+              <span className="bento-stat-value font-mono" style={{ color: '#0e7490' }}>
                 {volumes?.TC?.volume_ml !== undefined ? `${volumes.TC.volume_ml.toFixed(1)} mL` : '--'}
               </span>
               <span className="bento-stat-hint">Labels 1, 4 (Active Core)</span>
             </div>
 
-            <div className="bento-stat-box">
-              <span className="bento-stat-label">Enhancing Tumour (ET)</span>
-              <span className="bento-stat-value font-mono" style={{ color: '#ca8a04' }}>
+            <div className="bento-stat-box" style={{ borderLeft: '3px solid #f59e0b', background: 'linear-gradient(90deg, rgba(245,158,11,0.05), #ffffff)' }}>
+              <span className="bento-stat-label" style={{ color: '#d97706' }}>Enhancing Tumour (ET)</span>
+              <span className="bento-stat-value font-mono" style={{ color: '#b45309' }}>
                 {volumes?.ET?.volume_ml !== undefined ? `${volumes.ET.volume_ml.toFixed(1)} mL` : '--'}
               </span>
               <span className="bento-stat-hint">Label 4 (Hyper-enhancing)</span>

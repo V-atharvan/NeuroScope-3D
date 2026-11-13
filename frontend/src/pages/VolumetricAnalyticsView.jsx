@@ -63,7 +63,7 @@ export default function VolumetricAnalyticsView({
       bbox: formatBbox(wt?.bounding_box_voxel),
       centroid: wt?.centroid_voxel,
       status: wt?.measurement_status ? wt.measurement_status.replace('_', ' ').toUpperCase() : (wt?.voxel_count > 0 ? 'VALID' : 'EMPTY'),
-      color: '#65D0F4'
+      color: '#10B981'
     },
     {
       compartment: 'Tumour Core (TC)',
@@ -75,7 +75,7 @@ export default function VolumetricAnalyticsView({
       bbox: formatBbox(tc?.bounding_box_voxel),
       centroid: tc?.centroid_voxel,
       status: tc?.measurement_status ? tc.measurement_status.replace('_', ' ').toUpperCase() : (tc?.voxel_count > 0 ? 'VALID' : 'EMPTY'),
-      color: '#578EF5'
+      color: '#06B6D4'
     },
     {
       compartment: 'Enhancing Tumour (ET)',
@@ -87,7 +87,7 @@ export default function VolumetricAnalyticsView({
       bbox: formatBbox(et?.bounding_box_voxel),
       centroid: et?.centroid_voxel,
       status: et?.measurement_status ? et.measurement_status.replace('_', ' ').toUpperCase() : (et?.voxel_count > 0 ? 'VALID' : 'EMPTY'),
-      color: '#F2F7A0'
+      color: '#F59E0B'
     },
     {
       compartment: 'Peritumoral Edema (ED)',
@@ -99,7 +99,7 @@ export default function VolumetricAnalyticsView({
       bbox: 'Derived (WT - TC)',
       centroid: null,
       status: 'DERIVED',
-      color: '#CBD5E1'
+      color: '#64748B'
     }
   ];
 

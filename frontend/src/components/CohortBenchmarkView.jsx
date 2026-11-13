@@ -51,19 +51,8 @@ export default function CohortBenchmarkView({ onClose }) {
             <button
               type="button"
               onClick={onClose}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '6px 10px',
-                fontSize: '11px',
-                fontWeight: 600,
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #CBD5E1',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                color: '#334155'
-              }}
+              className="btn-secondary"
+              style={{ width: 'auto', padding: '6px 12px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '5px' }}
             >
               <ArrowLeft size={14} />
               <span>Back to Workstation</span>

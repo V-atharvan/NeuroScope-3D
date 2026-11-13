@@ -40,6 +40,7 @@ export default function DualCaseCompareViewer({
 
   const [sliceType, setSliceType] = useState('multi'); // 'multi' | 'render' | 'axial'
   const [syncScroll, setSyncScroll] = useState(true);
+  const [mobileActiveViewport, setMobileActiveViewport] = useState('both'); // 'both' | 'a' | 'b'
 
   const [comparisonData, setComparisonData] = useState(null);
   const [loadingComparison, setLoadingComparison] = useState(false);
@@ -499,22 +500,35 @@ export default function DualCaseCompareViewer({
         </div>
       </div>
 
-      {/* Dual Canvas Grid (Side-by-Side Viewports) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', height: '420px', minHeight: '420px', maxHeight: '420px', overflow: 'hidden' }}>
-        {/* VIEWPORT A: Baseline Study */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '420px',
-            maxHeight: '420px',
-            backgroundColor: '#0F172A',
-            border: '1px solid #1E293B',
-            borderRadius: 'var(--radius-sm)',
-            overflow: 'hidden',
-            position: 'relative'
-          }}
+      {/* Mobile Viewport Focus Switcher */}
+      <div className="mobile-compare-viewport-switcher mobile-only" style={{ display: 'none', marginBottom: '8px' }}>
+        <button
+          type="button"
+          className={`segmented-btn ${mobileActiveViewport === 'both' ? 'active' : ''}`}
+          onClick={() => setMobileActiveViewport('both')}
         >
+          Both Viewports
+        </button>
+        <button
+          type="button"
+          className={`segmented-btn ${mobileActiveViewport === 'a' ? 'active' : ''}`}
+          onClick={() => setMobileActiveViewport('a')}
+        >
+          T0 Baseline
+        </button>
+        <button
+          type="button"
+          className={`segmented-btn ${mobileActiveViewport === 'b' ? 'active' : ''}`}
+          onClick={() => setMobileActiveViewport('b')}
+        >
+          T1 Follow-up
+        </button>
+      </div>
+
+      {/* Dual Canvas Grid (Side-by-Side Viewports) */}
+      <div className={`dual-compare-grid mobile-show-${mobileActiveViewport}`}>
+        {/* VIEWPORT A: Baseline Study */}
+        <div className={`dual-viewport-card viewport-a ${mobileActiveViewport === 'b' ? 'mobile-hidden' : ''}`}>
           {/* Header Bar A */}
           <div
             style={{
@@ -610,19 +624,7 @@ export default function DualCaseCompareViewer({
         </div>
 
         {/* VIEWPORT B: Follow-up Study */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '420px',
-            maxHeight: '420px',
-            backgroundColor: '#0F172A',
-            border: '1px solid #1E293B',
-            borderRadius: 'var(--radius-sm)',
-            overflow: 'hidden',
-            position: 'relative'
-          }}
-        >
+        <div className={`dual-viewport-card viewport-b ${mobileActiveViewport === 'a' ? 'mobile-hidden' : ''}`}>
           {/* Header Bar B */}
           <div
             style={{
